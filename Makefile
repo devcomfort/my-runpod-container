@@ -1,29 +1,65 @@
-# Makefile for building and pushing Docker images
+# 기본 설정
+RELEASE ?= 0.2
+DOCKER_HUB_USERNAME ?= devcomfort
 
-# 기본 변수 설정
-IMAGE_NAME = devcomfort/personal-runpod-environment
-BASE_IMAGE = ubuntu:22.04
+# 빌드 대상 목록
+TARGETS := cpu 11-1-1 11-8-0 12-1-0 12-2-0 12-4-1 12-5-1 12-6-2
 
-# 기본 버전 설정 (인자가 없을 경우) -
-VERSION ?= 0.2
-
-# 빌드 명령
+# 도커 빌드
+.PHONY: build
 build:
-	@echo "Building Docker image: $(IMAGE_NAME):$(VERSION)"
-	docker build -t $(IMAGE_NAME):$(VERSION) . --build-arg BASE_IMAGE=$(BASE_IMAGE)
+	@docker buildx bake --file docker-bake.hcl
 
-# 푸시 명령
+# 순차 빌드
+.PHONY: build-seq
+build-seq:
+	@for target in $(TARGETS); do \
+		echo "=== $$target 빌드 시작 ==="; \
+		docker buildx bake $$target --file docker-bake.hcl || exit 1; \
+	done
+
+# 순차 푸시
+.PHONY: push-seq
+push-seq:
+	@for target in $(TARGETS); do \
+		echo "=== $$target 푸시 시작 ==="; \
+		docker buildx bake $$target --file docker-bake.hcl --push || exit 1; \
+	done
+
+# 순차 전체 작업
+.PHONY: all-seq
+all-seq: build-seq push-seq
+
+# 특정 타겟 빌드
+.PHONY: $(TARGETS)
+$(TARGETS):
+	@docker buildx bake $@ --file docker-bake.hcl
+
+# 도커 이미지 푸시
+.PHONY: push
 push:
-	@echo "Pushing Docker image: $(IMAGE_NAME):$(VERSION)"
-	docker push $(IMAGE_NAME):$(VERSION)
+	@docker buildx bake --file docker-bake.hcl --push
 
-# 빌드 및 푸시를 한 번에 수행하는 명령
-all: build push
+# 특정 타겟 푸시
+.PHONY: push-$(TARGETS)
+push-%:
+	@docker buildx bake $* --file docker-bake.hcl --push
 
-# 사용 방법
+# 전체 정리
+.PHONY: clean
+clean:
+	@docker system prune -f
+
+# 도움말
+.PHONY: help
 help:
-	@echo "Usage:"
-	@echo "  make build VERSION=<version>  # Build the Docker image with the specified version"
-	@echo "  make push VERSION=<version>   # Push the Docker image with the specified version"
-	@echo "  make all VERSION=<version>    # Build and push the Docker image"
-	@echo "  make help                     # Show this help message"
+	@echo "사용 가능한 명령어:"
+	@echo "  build            : 도커 이미지를 빌드합니다."
+	@echo "  <target>        : 특정 타겟을 빌드합니다. (예: make 11-1-1)"
+	@echo "  push             : 도커 이미지를 푸시합니다."
+	@echo "  push <target>   : 특정 타겟을 푸시합니다. (예: make push-11-1-1)"
+	@echo "  build-seq       : 모든 타겟을 순차적으로 빌드합니다."
+	@echo "  push-seq        : 모든 타겟을 순차적으로 푸시합니다."
+	@echo "  all-seq         : 모든 타겟에 대해 빌드와 푸시를 순차적으로 수행합니다."
+	@echo "  clean           : 모든 도커 리소스를 정리합니다."
+	@echo "  help             : 이 도움말을 표시합니다."
