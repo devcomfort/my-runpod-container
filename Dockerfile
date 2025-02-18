@@ -35,9 +35,6 @@ ENV VSCODE_SERVE_MODE=remote
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends software-properties-common && \
-    add-apt-repository ppa:deadsnakes/ppa && \
-    apt-get update -y && \
-    apt-get install -y --no-install-recommends \
     # Basic Utilities
     apt install --yes --no-install-recommends \
     bash \
@@ -103,18 +100,9 @@ RUN apt-get update && \
     nginx \
     tzdata \
     expect \
-    python3.10-dev python3.10-venv \
     gnome-keyring ca-certificates && \
     apt-get autoremove -y && \
     apt-get clean -y 
-
-# === 파이썬 환경 설정 ===
-RUN ln -s /usr/bin/python3.10 /usr/bin/python && \
-    rm /usr/bin/python3 && \
-    ln -s /usr/bin/python3.10 /usr/bin/python3 && \
-    curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
-    python get-pip.py
-RUN pip install --upgrade pip && pip install jupyterlab
 
 # === VS Code 서버 설정 ===
 COPY src/vscode-server-setup.sh /tmp/vscode-server-setup.sh
