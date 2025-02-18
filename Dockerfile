@@ -53,7 +53,7 @@ RUN apt-get upgrade --yes
 # 기본 유틸리티 설치
 RUN apt install --yes --no-install-recommends \
     bash ca-certificates curl file git inotify-tools jq \
-    libgl1 lsof vim nano nginx \
+    libgl1 lsof vim nano nginx htop \
     # SSH 및 시스템 도구
     openssh-server procps rsync sudo software-properties-common\
     unzip wget zip
