@@ -5,30 +5,30 @@ ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 
 # === 기본 셸 및 환경 설정 ===
-# Bash를 기본 쉘로 설정하고 파이프 오류 방지
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # === 기본 환경 변수 설정 ===
-ENV SHELL=/bin/bash
-ENV DEBIAN_FRONTEND=noninteractive
+ENV DEBIAN_FRONTEND=noninteractive \
+    SHELL=/bin/bash
 
 # === 버전 관리 ===
 ARG BASE_RELEASE_VERSION
 ENV BASE_RELEASE_VERSION=${BASE_RELEASE_VERSION}
 
-# === 작업 디렉토리 설정 ===
-WORKDIR /
-
 # === 개발 환경 설정 ===
 ENV DEBIAN_FRONTEND=noninteractive
 ENV VSCODE_SERVE_MODE=remote
+
+# === 작업 디렉토리 설정 ===
+WORKDIR /
 
 # === 시스템 패키지 관리 ===
 ## APT 미러 서버 설정 주의사항:
 ## 1. 프로토콜(http/https)과 경로 끝에 파일 구분자가(/) 정확히 설정되어야 함
 ## 2. 잘못된 경로 설정은 apt-get이 정상적으로 작동하지 않을 수 있음
 ## 3. Kakao 미러 사용을 권장함
-# RUN sed -i 's|http://archive.ubuntu.com/ubuntu|http://mirror.kakao.com/ubuntu|' /etc/apt/sources.list
+RUN sed -i 's|http://archive.ubuntu.com/ubuntu|http://mirror.kakao.com/ubuntu|' /etc/apt/sources.list
+RUN sed -i 's|http://security.ubuntu.com/ubuntu|http://mirror.kakao.com/ubuntu|' /etc/apt/sources.list
 
 # === 시스템 패키지 관리 ===
 RUN apt-get update && \
@@ -65,7 +65,7 @@ RUN apt-get update && \
     libx264-dev \
     libxext6 \
     libxrender-dev \
-    libxvidcore-dev && \
+    libxvidcore-dev \
     # Deep Learning Dependencies and Miscellaneous
     libatlas-base-dev \
     libffi-dev \
@@ -110,8 +110,8 @@ COPY --from=proxy readme.html /usr/share/nginx/html/readme.html
 COPY README.md /usr/share/nginx/html/README.md
 
 # === 시작 스크립트 설정 ===
-COPY --from=scripts post_start.sh /
-COPY --from=scripts start.sh /
+COPY ./scripts/post_start.sh /
+COPY ./scripts/start.sh /
 RUN chmod +x /start.sh
 
 # === 컨테이너 포트 노출 ===
