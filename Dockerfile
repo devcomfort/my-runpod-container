@@ -10,7 +10,6 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # === 기본 환경 변수 설정 ===
 ENV SHELL=/bin/bash
-ENV PYTHONUNBUFFERED=True
 ENV DEBIAN_FRONTEND=noninteractive
 
 # === 버전 관리 ===
@@ -19,9 +18,9 @@ ENV BASE_RELEASE_VERSION=${BASE_RELEASE_VERSION}
 
 # === 작업 디렉토리 설정 ===
 WORKDIR /
-ENV DEBIAN_FRONTEND=noninteractive
 
 # === 개발 환경 설정 ===
+ENV DEBIAN_FRONTEND=noninteractive
 ENV VSCODE_SERVE_MODE=remote
 
 # === 시스템 패키지 관리 ===
@@ -31,43 +30,26 @@ ENV VSCODE_SERVE_MODE=remote
 ## 3. Kakao 미러 사용을 권장함
 # RUN sed -i 's|http://archive.ubuntu.com/ubuntu|http://mirror.kakao.com/ubuntu|' /etc/apt/sources.list
 
-# === 필수 시스템 패키지 설치 ===
+# === 시스템 패키지 관리 ===
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y --no-install-recommends software-properties-common && \
-    # Basic Utilities
-    apt install --yes --no-install-recommends \
-    bash \
-    ca-certificates \
-    curl \
-    file \
-    git \
-    inotify-tools \
-    jq \
-    libgl1 \
-    lsof \
-    vim \
-    nano \
-    htop \
-    # Required for SSH access
-    openssh-server \
-    procps \
-    rsync \
-    sudo \
+    apt-get install -y --no-install-recommends \
     software-properties-common \
-    unzip \
-    wget \
-    zip && \
-    # Build Tools and Development
-    apt install --yes --no-install-recommends \
     build-essential \
     make \
     cmake \
     gfortran \
     libblas-dev \
-    liblapack-dev && \
+    liblapack-dev \
+    git \
+    nano \
+    htop \
+    nginx \
+    unzip \
+    zip \
+    wget \
+    curl \
     # Image and Video Processing
-    apt install --yes --no-install-recommends \
     ffmpeg \
     libavcodec-dev \
     libavfilter-dev \
@@ -85,14 +67,12 @@ RUN apt-get update && \
     libxrender-dev \
     libxvidcore-dev && \
     # Deep Learning Dependencies and Miscellaneous
-    apt install --yes --no-install-recommends \
     libatlas-base-dev \
     libffi-dev \
     libhdf5-serial-dev \
     libsm6 \
-    libssl-dev && \
+    libssl-dev \
     # File Systems and Storage
-    apt install --yes --no-install-recommends \
     cifs-utils \
     nfs-common \
     zstd \
@@ -102,7 +82,7 @@ RUN apt-get update && \
     expect \
     gnome-keyring ca-certificates && \
     apt-get autoremove -y && \
-    apt-get clean -y 
+    apt-get clean -y
 
 # === VS Code 서버 설정 ===
 COPY src/vscode-server-setup.sh /tmp/vscode-server-setup.sh
