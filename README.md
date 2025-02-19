@@ -21,3 +21,4 @@ docker push devcomfort/personal-runpod-environment:0.2
 ## NOTE
 
 - `htop` 패키지를 설치할 수 없어서 apt 미러 주소를 카카오로 변경하였습니다.
+-  RunPod 기본 컨테이너에 `gh`, `htop`, `rye`를 추가한 컨테이너입니다.
