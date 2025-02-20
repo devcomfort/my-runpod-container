@@ -20,5 +20,7 @@ docker push devcomfort/personal-runpod-environment:0.2
 
 ## NOTE
 
+- 지속적으로 오류가 발생하여 apt 미러 서버 주소를 변경하였습니다. 혹시나 변경해야 한다면 `archive.ubuntu.com`과 `security.ubuntu.com` 모두 변경해야 한다는 사실을 잊지마세요.
+  미러 서버마다 가지고 있는 패키지 정보가 달라서 보안 검사에서 오류가 발생합니다.
 - `htop` 패키지를 설치할 수 없어서 apt 미러 주소를 카카오로 변경하였습니다.
 -  RunPod 기본 컨테이너에 `gh`, `htop`, `rye`를 추가한 컨테이너입니다.
