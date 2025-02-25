@@ -10,14 +10,12 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # === 기본 환경 변수 설정 ===
 ENV DEBIAN_FRONTEND=noninteractive \
     SHELL=/bin/bash
+# === 개발 환경 설정 ===
+ENV VSCODE_SERVE_MODE=remote
 
 # === 버전 관리 ===
 ARG BASE_RELEASE_VERSION
 ENV BASE_RELEASE_VERSION=${BASE_RELEASE_VERSION}
-
-# === 개발 환경 설정 ===
-ENV DEBIAN_FRONTEND=noninteractive
-ENV VSCODE_SERVE_MODE=remote
 
 # === 작업 디렉토리 설정 ===
 WORKDIR /
@@ -49,6 +47,7 @@ RUN apt-get update && \
     zip \
     wget \
     curl \
+    openssh-server \
     # Image and Video Processing
     ffmpeg \
     libavcodec-dev \
@@ -89,6 +88,8 @@ COPY src/vscode-server-setup.sh /tmp/vscode-server-setup.sh
 RUN chmod +x /tmp/vscode-server-setup.sh && \
     /tmp/vscode-server-setup.sh && \
     rm /tmp/vscode-server-setup.sh
+
+# === copy scripts ===
 COPY src/* /usr/local/bin/
 
 # === GitHub CLI 통합 ===
@@ -97,6 +98,10 @@ ENV PATH="${PATH}:~/.local/bin/gh"
 
 # === Python 패키지 관리 도구 설치 ===
 RUN curl -sSf https://rye.astral.sh/get | RYE_VERSION="latest" RYE_INSTALL_OPTION="--yes" bash
+
+# === RunPod을 위한 jupyterlab 설정 (전역 설치)  ===
+RUN source ~/.profile && \
+    rye install jupyterlab
 
 # === NGINX 프록시 설정 ===
 RUN wget -O init-deb.sh https://www.linode.com/docs/assets/660-init-deb.sh && \
@@ -110,8 +115,8 @@ COPY --from=proxy readme.html /usr/share/nginx/html/readme.html
 COPY README.md /usr/share/nginx/html/README.md
 
 # === 시작 스크립트 설정 ===
-COPY ./scripts/post_start.sh /
-COPY ./scripts/start.sh /
+COPY --from=scripts post_start.sh /
+COPY --from=scripts start.sh /
 RUN chmod +x /start.sh
 
 # === 컨테이너 포트 노출 ===
