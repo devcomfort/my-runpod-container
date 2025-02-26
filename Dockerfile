@@ -48,7 +48,6 @@ RUN apt-get update && \
     wget \
     curl \
     openssh-server \
-    sudo \
     # Image and Video Processing
     ffmpeg \
     libavcodec-dev \
@@ -84,47 +83,23 @@ RUN apt-get update && \
     apt-get autoremove -y && \
     apt-get clean -y
 
-# === 사용자 생성 및 권한 설정 ===
-ARG USERNAME=runpod
-ARG USER_UID=1000
-ARG USER_GID=$USER_UID
-
-# 사용자 그룹 생성
-RUN groupadd --gid $USER_GID $USERNAME && \
-    useradd --uid $USER_UID --gid $USER_GID -m $USERNAME && \
-    echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
-    mkdir -p /home/$USERNAME/workspace && \
-    chown -R $USERNAME:$USERNAME /home/$USERNAME
-
 # === VS Code 서버 설정 ===
 RUN curl -fsSL https://code-server.dev/install.sh | bash
 
 # === copy scripts ===
 COPY src/* /usr/local/bin/
-RUN chmod +x /usr/local/bin/*
 
 # === GitHub CLI 통합 ===
-USER $USERNAME
-WORKDIR /home/$USERNAME
-
 RUN curl -sS https://webi.sh/gh | bash && \
-    echo 'source ~/.config/envman/PATH.env' >> ~/.bashrc
+    echo 'export PATH="/root/.local/bin:$PATH"' >> /root/.bashrc
 
 # === Python 패키지 관리 도구 설치 ===
-RUN curl -sSf https://rye.astral.sh/get | RYE_VERSION="latest" RYE_INSTALL_OPTION="--yes" bash && \
-    echo 'source ~/.profile' >> ~/.bashrc
+RUN curl -sSf https://rye.astral.sh/get | RYE_HOME="/root/.rye" RYE_VERSION="latest" RYE_INSTALL_OPTION="--yes" bash && \
+    echo 'source /root/.rye/env' >> /root/.bashrc
 
-# === RunPod을 위한 jupyterlab 설정 (사용자 설치) ===
-RUN source ~/.profile && \
+# === RunPod을 위한 jupyterlab 설정 (전역 설치) ===
+RUN source /root/.rye/env && \
     rye install jupyterlab
-
-# 사용자 환경 설정
-RUN mkdir -p ~/.config/code-server && \
-    echo 'bind-addr: 0.0.0.0:8080\nauth: none' > ~/.config/code-server/config.yaml && \
-    mkdir -p ~/.jupyter
-
-# 다시 root 사용자로 전환
-USER root
 
 # === NGINX 프록시 설정 ===
 RUN wget -O init-deb.sh https://www.linode.com/docs/assets/660-init-deb.sh && \
@@ -137,7 +112,7 @@ COPY --from=proxy nginx.conf /etc/nginx/nginx.conf
 COPY --from=proxy readme.html /usr/share/nginx/html/readme.html
 COPY README.md /usr/share/nginx/html/README.md
 
-# === 시작 스크립트 수정 ===
+# === 시작 스크립트 설정 ===
 COPY --from=scripts post_start.sh /
 COPY --from=scripts start.sh /
 RUN chmod +x /start.sh
@@ -147,14 +122,6 @@ RUN chmod +x /start.sh
 EXPOSE 22 8000 8080
 # HTTP Ports
 EXPOSE 80 443
-
-# === SSH 설정 ===
-RUN mkdir -p /var/run/sshd && \
-    sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
-    sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
-
-# 환경 변수 설정
-ENV USER_NAME=$USERNAME
 
 # === 기본 명령어 설정 ===
 CMD ["/start.sh"]
