@@ -90,8 +90,8 @@ RUN curl -fsSL https://code-server.dev/install.sh | bash
 COPY src/* /usr/local/bin/
 
 # === GitHub CLI 통합 ===
-RUN curl -sS https://webi.sh/gh | bash
-ENV PATH="${PATH}:~/.local/bin/gh"
+RUN curl -sS https://webi.sh/gh | bash; \
+    source ~/.config/envman/PATH.env
 
 # === Python 패키지 관리 도구 설치 ===
 RUN curl -sSf https://rye.astral.sh/get | RYE_VERSION="latest" RYE_INSTALL_OPTION="--yes" bash
