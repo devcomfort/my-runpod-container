@@ -84,10 +84,7 @@ RUN apt-get update && \
     apt-get clean -y
 
 # === VS Code 서버 설정 ===
-COPY src/vscode-server-setup.sh /tmp/vscode-server-setup.sh
-RUN chmod +x /tmp/vscode-server-setup.sh && \
-    /tmp/vscode-server-setup.sh && \
-    rm /tmp/vscode-server-setup.sh
+RUN curl -fsSL https://code-server.dev/install.sh | bash
 
 # === copy scripts ===
 COPY src/* /usr/local/bin/
@@ -120,7 +117,10 @@ COPY --from=scripts start.sh /
 RUN chmod +x /start.sh
 
 # === 컨테이너 포트 노출 ===
-EXPOSE 8000
+# TCP Ports
+EXPOSE 22 8000 8080
+# HTTP Ports
+EXPOSE 80 443
 
 # === 기본 명령어 설정 ===
 CMD ["/start.sh"]
