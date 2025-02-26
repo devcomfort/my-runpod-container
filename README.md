@@ -1,26 +1,49 @@
 # Personal RunPod Environment
 
-이 프로젝트는 RunPod를 위한 개인 환경을 구성하기 위한 Docker 이미지를 제공합니다. 필요한 경우 베이스 이미지를 변경할 수 있습니다.
+이 프로젝트는 RunPod를 위한 개인 환경을 구성하기 위한 Docker 이미지를 제공합니다. 기본 RunPod 컨테이너에 `gh`, `htop`, `rye` 등 유용한 도구가 추가되어 있습니다.
 
-## 빌드 명령
+## 주요 특징
 
-이미지를 빌드하려면 아래 명령어를 사용하세요. 기본적으로 Ubuntu 22.04를 베이스 이미지로 설정합니다.
+- 다양한 CUDA 버전 지원 (CPU 전용 버전도 제공)
+- 편리한 개발 도구 포함 (`gh`, `htop`, `rye`)
+- 최적화된 APT 미러 서버 설정
 
-```bash
-docker build -t devcomfort/personal-runpod-environment:0.2 . --build-arg BASE_IMAGE=ubuntu:22.04
-```
+## Makefile을 이용한 빌드 및 배포
 
-## 푸시 명령
-
-이미지를 Docker Hub에 푸시하려면 아래 명령어를 사용하세요.
+이 프로젝트는 다양한 버전의 이미지를 쉽게 관리할 수 있는 Makefile을 제공합니다:
 
 ```bash
-docker push devcomfort/personal-runpod-environment:0.2
+# 주요 명령어
+make build      # 모든 버전 동시 빌드
+make push       # 모든 버전 동시 빌드 및 Docker Hub에 푸시
+make all-seq    # 모든 버전 순차적으로 빌드 후 푸시
+
+# 특정 타겟 작업
+make 11-8-0     # CUDA 11.8.0 버전만 빌드
+make push-11-8-0  # CUDA 11.8.0 버전만 푸시
+
+# 유지보수 명령어
+make clean      # 도커 리소스 정리
+make help       # 도움말 표시
 ```
 
-## NOTE
+지원되는 빌드 타겟: `cpu`, `11-1-1`, `11-8-0`, `12-1-0`, `12-2-0`, `12-4-1`, `12-5-1`, `12-6-2`
 
-- 지속적으로 오류가 발생하여 apt 미러 서버 주소를 변경하였습니다. 혹시나 변경해야 한다면 `archive.ubuntu.com`과 `security.ubuntu.com` 모두 변경해야 한다는 사실을 잊지마세요.
-  미러 서버마다 가지고 있는 패키지 정보가 달라서 보안 검사에서 오류가 발생합니다.
-- `htop` 패키지를 설치할 수 없어서 apt 미러 주소를 카카오로 변경하였습니다.
--  RunPod 기본 컨테이너에 `gh`, `htop`, `rye`를 추가한 컨테이너입니다.
+## RunPod Template 설정
+
+RunPod에서 이 이미지를 사용하려면 다음과 같이 Template을 설정하세요:
+
+1. **Container Image**: 
+   - `docker.io/devcomfort/personal-runpod-environment:0.2-cuda11.8.0` 
+   - (또는 필요한 CUDA 버전에 맞게 선택)
+
+2. **Expose HTTP Ports (Max 10)**:
+   - `80, 443`
+
+3. **Expose TCP Ports**:
+   - `22, 8080, 8000`
+
+## 참고사항
+
+- APT 미러 서버 주소를 변경할 경우, `archive.ubuntu.com`과 `security.ubuntu.com` 모두 일관되게 변경해야 합니다. 미러 서버마다 패키지 정보가 다르기 때문에 불일치 시 보안 검사에서 오류가 발생할 수 있습니다.
+- 현재 APT 미러 주소는 카카오 서버를 사용하도록 설정되어 있어 `htop` 등의 패키지 설치 문제를 해결했습니다.
