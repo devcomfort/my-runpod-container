@@ -90,18 +90,32 @@ RUN apt-get update && \
 RUN curl -fsSL https://code-server.dev/install.sh | bash
 
 # === Ollama 설정 ===
-RUN curl -fsSL https://ollama.com/install.sh | bash
+RUN curl -sS https://webi.sh/ollama | bash; \
+    echo "source ~/.config/envman/PATH.env" >> /root/.bashrc
 
 # === copy scripts ===
 COPY src/* /usr/local/bin/
 
 # === GitHub CLI 통합 ===
-RUN curl -sS https://webi.sh/gh | bash && \
-    echo 'source ~/.config/envman/PATH.env' >> /root/.profile
+RUN curl -sS https://webi.sh/gh | bash ; \
+    echo 'source ~/.config/envman/PATH.env' >> /root/.bashrc
+
+# === rust, cargo 설치 ===
+RUN curl -sS https://webi.sh/rustlang | bash; \
+    echo "source ~/.config/envman/PATH.env" >> /root/.bashrc
+
+# === Golang 설치 ===
+RUN curl -sS https://webi.sh/golang | bash; \
+    echo "source ~/.config/envman/PATH.env" >> /root/.bashrc
+
+# === tinygo 설치 ===
+RUN curl -sS https://webi.sh/tinygo | bash; \
+    echo "source ~/.config/envman/PATH.env" >> /root/.bashrc
 
 # === Python 패키지 관리 도구 설치 ===
 RUN curl -sSf https://rye.astral.sh/get | RYE_HOME="/root/.rye" RYE_VERSION="latest" RYE_INSTALL_OPTION="--yes" bash && \
-    echo 'source /root/.rye/env' >> /root/.profile
+    echo 'source /root/.rye/env' >> /root/.bashrc
+
 
 # === RunPod을 위한 jupyterlab 설정 (전역 설치) ===
 RUN source /root/.rye/env && \
