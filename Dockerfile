@@ -48,6 +48,9 @@ RUN apt-get update && \
     wget \
     curl \
     openssh-server \
+    # Utils
+    tree \
+    iftop \
     # Image and Video Processing
     ffmpeg \
     libavcodec-dev \
@@ -86,16 +89,19 @@ RUN apt-get update && \
 # === VS Code 서버 설정 ===
 RUN curl -fsSL https://code-server.dev/install.sh | bash
 
+# === Ollama 설정 ===
+RUN curl -fsSL https://ollama.com/install.sh | bash
+
 # === copy scripts ===
 COPY src/* /usr/local/bin/
 
 # === GitHub CLI 통합 ===
 RUN curl -sS https://webi.sh/gh | bash && \
-    echo 'export PATH="/root/.local/bin:$PATH"' >> /root/.bashrc
+    echo 'source ~/.config/envman/PATH.env' >> /root/.profile
 
 # === Python 패키지 관리 도구 설치 ===
 RUN curl -sSf https://rye.astral.sh/get | RYE_HOME="/root/.rye" RYE_VERSION="latest" RYE_INSTALL_OPTION="--yes" bash && \
-    echo 'source /root/.rye/env' >> /root/.bashrc
+    echo 'source /root/.rye/env' >> /root/.profile
 
 # === RunPod을 위한 jupyterlab 설정 (전역 설치) ===
 RUN source /root/.rye/env && \
