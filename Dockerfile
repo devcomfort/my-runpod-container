@@ -103,6 +103,12 @@ RUN curl -sS https://webi.sh/gh | bash ; \
 # === rust, cargo 설치 ===
 RUN curl -sS https://webi.sh/rustlang | bash; \
     echo "source ~/.config/envman/PATH.env" >> /root/.bashrc
+# === memlimit 설치 ===
+# NOTE: RunPod은 OOM(Out of Memory)에서도 프로세스를 종료하지 않음.
+#       그래서 OOM을 유발하는 프로세스가 생기면 무한히 대기해야함. (=돈낭비)
+#       따라서 프로세스를 종료할 수 있도록 미리 장치를 마련해야하는데, memlimit으로 해결하려고 함.
+# REF: https://github.com/shadyfennec/memlimit
+RUN cargo install memlimit
 
 # === Golang 설치 ===
 RUN curl -sS https://webi.sh/golang | bash; \
