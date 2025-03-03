@@ -88,44 +88,42 @@ RUN apt-get update && \
 
 # === VS Code 서버 설정 ===
 RUN curl -fsSL https://code-server.dev/install.sh | bash
-
-# === Ollama 설정 ===
-RUN curl -sS https://webi.sh/ollama | bash; \
-    echo "source ~/.config/envman/PATH.env" >> /root/.bashrc
-
 # === copy scripts ===
 COPY src/* /usr/local/bin/
 
-# === GitHub CLI 통합 ===
-RUN curl -sS https://webi.sh/gh | bash ; \
-    echo 'source ~/.config/envman/PATH.env' >> /root/.bashrc
+# === webinstall.sh를 통한 유틸리티 설치 ===
+# ollama
+RUN curl -sS https://webi.sh/ollama | bash
+# gh (GitHub CLI)
+RUN curl -sS https://webi.sh/gh | bash
+# golang
+RUN curl -sS https://webi.sh/golang | bash
+# tinygo
+RUN curl -sS https://webi.sh/tinygo | bash
 
-# === rust, cargo 설치 ===
-RUN curl -sS https://webi.sh/rustlang | bash; \
-    echo "source ~/.config/envman/PATH.env" >> /root/.bashrc
+# === webinstall.sh로 설치한 것들 환경 변수로 동작하도록 등록 ===
+RUN echo "source /root/.config/envman/PATH.env" >> /root/.profile
+
+# === rust, cargo 설치 및 PATH 설정 ===
+RUN curl -sSf https://sh.rustup.rs | sh -s -- -y && \
+    echo 'source "$HOME/.cargo/env"' >> /root/.profile
+
+# === Python 패키지 관리 도구 설치 ===
+RUN curl -sSf https://rye.astral.sh/get | RYE_HOME="/root/.rye" RYE_VERSION="latest" RYE_INSTALL_OPTION="--yes" bash && \
+    echo 'source /root/.rye/env' >> /root/.profile
+
 # === memlimit 설치 ===
 # NOTE: RunPod은 OOM(Out of Memory)에서도 프로세스를 종료하지 않음.
 #       그래서 OOM을 유발하는 프로세스가 생기면 무한히 대기해야함. (=돈낭비)
 #       따라서 프로세스를 종료할 수 있도록 미리 장치를 마련해야하는데, memlimit으로 해결하려고 함.
 # REF: https://github.com/shadyfennec/memlimit
-RUN cargo install memlimit
-
-# === Golang 설치 ===
-RUN curl -sS https://webi.sh/golang | bash; \
-    echo "source ~/.config/envman/PATH.env" >> /root/.bashrc
-
-# === tinygo 설치 ===
-RUN curl -sS https://webi.sh/tinygo | bash; \
-    echo "source ~/.config/envman/PATH.env" >> /root/.bashrc
-
-# === Python 패키지 관리 도구 설치 ===
-RUN curl -sSf https://rye.astral.sh/get | RYE_HOME="/root/.rye" RYE_VERSION="latest" RYE_INSTALL_OPTION="--yes" bash && \
-    echo 'source /root/.rye/env' >> /root/.bashrc
-
+RUN source /root/.profile && \
+    cargo install memlimit
 
 # === RunPod을 위한 jupyterlab 설정 (전역 설치) ===
 RUN source /root/.rye/env && \
-    rye install jupyterlab
+    rye install jupyterlab && \
+    rye install magic-wormhole
 
 # === NGINX 프록시 설정 ===
 RUN wget -O init-deb.sh https://www.linode.com/docs/assets/660-init-deb.sh && \
