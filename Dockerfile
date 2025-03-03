@@ -123,7 +123,8 @@ RUN source /root/.profile && \
 # === RunPod을 위한 jupyterlab 설정 (전역 설치) ===
 RUN source /root/.rye/env && \
     rye install jupyterlab && \
-    rye install magic-wormhole
+    rye install magic-wormhole && \
+    rye install invoke
 
 # === NGINX 프록시 설정 ===
 RUN wget -O init-deb.sh https://www.linode.com/docs/assets/660-init-deb.sh && \
