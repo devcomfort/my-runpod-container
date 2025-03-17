@@ -124,7 +124,8 @@ RUN source /root/.profile && \
 RUN source /root/.rye/env && \
     rye install jupyterlab && \
     rye install magic-wormhole && \
-    rye install invoke
+    rye install invoke && \
+    rye install vllm
 
 # === NGINX 프록시 설정 ===
 RUN wget -O init-deb.sh https://www.linode.com/docs/assets/660-init-deb.sh && \
