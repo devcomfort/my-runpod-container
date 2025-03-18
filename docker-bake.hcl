@@ -7,13 +7,18 @@ variable "DOCKER_HUB_USERNAME" {
   default = "devcomfort"
 }
 
+variable "GHCR_USERNAME" {}
+
 group "default" {
   targets = ["cpu", "11-1-1", "11-8-0", "12-1-0", "12-2-0", "12-4-1", "12-5-1", "12-6-2"]
 }
 
 target "cpu" {
-    dockerfile = "Dockerfile"
-    tags = ["${DOCKER_HUB_USERNAME}/personal-runpod-environment:${RELEASE}-cpu"]
+    dockerfile = "dockerfile"
+    tags = [
+        "${DOCKER_HUB_USERNAME}/personal-runpod-environment:v${RELEASE}-cpu",
+        "ghcr.io/${GHCR_USERNAME}/personal-runpod-environment:v${RELEASE}-cpu"
+    ]
     platforms = ["linux/amd64", "linux/arm64"]
     contexts = {
         scripts = "./scripts"
@@ -21,14 +26,17 @@ target "cpu" {
         logo = "./logo"
     }
     args = {
-        BASE_RELEASE_VERSION = "${RELEASE}"
+        BASE_release_version = "${RELEASE}"
         BASE_IMAGE = "ubuntu:20.04"
     }
 }
 
 target "11-1-1" {
     dockerfile = "Dockerfile"
-    tags = ["${DOCKER_HUB_USERNAME}/personal-runpod-environment:${RELEASE}-cuda11.1.1"]
+    tags = [
+        "${DOCKER_HUB_USERNAME}/personal-runpod-environment:${RELEASE}-cuda11.1.1",
+        "ghcr.io/${GHCR_USERNAME}/personal-runpod-environment:${RELEASE}-cuda11.1.1",
+    ]
     platforms = ["linux/amd64"]
     contexts = {
         scripts = "./scripts"
@@ -43,7 +51,10 @@ target "11-1-1" {
 
 target "11-8-0" {
     dockerfile = "Dockerfile"
-    tags = ["${DOCKER_HUB_USERNAME}/personal-runpod-environment:${RELEASE}-cuda11.8.0"]
+    tags = [
+        "${DOCKER_HUB_USERNAME}/personal-runpod-environment:${RELEASE}-cuda11.8.0",
+        "ghcr.io/${GHCR_USERNAME}/personal-runpod-environment:${RELEASE}-cuda11.8.0"
+    ]
     platforms = ["linux/amd64"]
     contexts = {
         scripts = "./scripts"
@@ -58,7 +69,10 @@ target "11-8-0" {
 
 target "12-1-0" {
     dockerfile = "Dockerfile"
-    tags = ["${DOCKER_HUB_USERNAME}/personal-runpod-environment:${RELEASE}-cuda12.1.0"]
+    tags = [
+        "${DOCKER_HUB_USERNAME}/personal-runpod-environment:${RELEASE}-cuda12.1.0",
+        "ghcr.io/${GHCR_USERNAME}/personal-runpod-environment:${RELEASE}-cuda12.1.0"
+    ]
     platforms = ["linux/amd64"]
     contexts = {
         scripts = "./scripts"
@@ -73,7 +87,10 @@ target "12-1-0" {
 
 target "12-2-0" {
     dockerfile = "Dockerfile"
-    tags = ["${DOCKER_HUB_USERNAME}/personal-runpod-environment:${RELEASE}-cuda12.2.0"]
+    tags = [
+        "${DOCKER_HUB_USERNAME}/personal-runpod-environment:${RELEASE}-cuda12.2.0",
+        "ghcr.io/${GHCR_USERNAME}/personal-runpod-environment:${RELEASE}-cuda12.2.0"
+    ]
     platforms = ["linux/amd64"]
     contexts = {
         scripts = "./scripts"
@@ -88,7 +105,10 @@ target "12-2-0" {
 
 target "12-4-1" {
     dockerfile = "Dockerfile"
-    tags = ["${DOCKER_HUB_USERNAME}/personal-runpod-environment:${RELEASE}-cuda12.4.1"]
+    tags = [
+        "${DOCKER_HUB_USERNAME}/personal-runpod-environment:${RELEASE}-cuda12.4.1",
+        "ghcr.io/${GHCR_USERNAME}/personal-runpod-environment:${RELEASE}-cuda12.4.1"
+    ]
     platforms = ["linux/amd64"]
     contexts = {
         scripts = "./scripts"
@@ -103,7 +123,10 @@ target "12-4-1" {
 
 target "12-5-1" {
     dockerfile = "Dockerfile"
-    tags = ["${DOCKER_HUB_USERNAME}/personal-runpod-environment:${RELEASE}-cuda12.5.1"]
+    tags = [
+        "${DOCKER_HUB_USERNAME}/personal-runpod-environment:${RELEASE}-cuda12.5.1",
+        "ghcr.io/${GHCR_USERNAME}/personal-runpod-environment:${RELEASE}-cuda12.5.1"
+    ]
     platforms = ["linux/amd64"]
     contexts = {
         scripts = "./scripts"
@@ -118,7 +141,10 @@ target "12-5-1" {
 
 target "12-6-2" {
     dockerfile = "Dockerfile"
-    tags = ["${DOCKER_HUB_USERNAME}/personal-runpod-environment:${RELEASE}-cuda12.6.2"]
+    tags = [
+        "${DOCKER_HUB_USERNAME}/personal-runpod-environment:${RELEASE}-cuda12.6.2",
+        "ghcr.io/${GHCR_USERNAME}/personal-runpod-environment:${RELEASE}-cuda12.6.2"
+    ]
     platforms = ["linux/amd64"]
     contexts = {
         scripts = "./scripts"
