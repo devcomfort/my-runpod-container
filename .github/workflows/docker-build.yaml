@@ -16,12 +16,12 @@ jobs:
       - name: Set up Buildx
         uses: docker/Setup-Buildx-action@v3
       - name: Login to Private Registry (dockerhub)
-        uses: docker/Login-action@v3
+        uses: docker/login-action@v3
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Login to GitHub Container Registry
-        uses: docker/Login-action@v3
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
