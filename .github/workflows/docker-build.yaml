@@ -1,0 +1,38 @@
+name: Build and Push Containers
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/Checkout@v3
+      - name: Set up QEMU
+        uses: docker/Setup-QEMU-action@v3
+      - name: Set up Buildx
+        uses: docker/Setup-Buildx-action@v3
+      - name: Login to Private Registry (dockerhub)
+        uses: docker/Login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Login to GitHub Container Registry
+        uses: docker/Login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set environment variables
+        run: |
+          echo "GHCR_USERNAME=${{ github.actor }}" >> $GITHUB_ENV
+          echo "RELEASE=0.2" >> $GITHUB_ENV
+          echo "DOCKER_HUB_USERNAME=${{ vars.DOCKERHUB_USERNAME }}" >> $GITHUB_ENV
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          bake-file: ./docker-bake.hcl
+          push: true
