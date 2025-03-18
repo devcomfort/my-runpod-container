@@ -22,12 +22,20 @@ if ! command -v docker >/dev/null; then
 fi
 
 # Check Docker version
-docker_version=$(docker --version | cut -d' ' -f3 | cut -d',' -f1)
-if [ $(echo "$docker_version" | cut -d'.' -f1) -lt 19 ] || [ $(echo "$docker_version" | cut -d'.' -f2) -lt 3 ]; then
+docker_version=$(docker --version | awk '{print $3}' | cut -d',' -f1)
+echo "Detected Docker version: $docker_version"
+
+# Function to compare versions
+version_ge() {
+    # $1: current version, $2: minimum required version
+    [ "$(printf '%s\n' "$1" "$2" | sort -V | head -n1)" = "$2" ]
+}
+
+if ! version_ge "$docker_version" "19.03"; then
     echo "Error: Docker version must be 19.03 or higher."
     exit 1
 else
-    echo "Docker version is $docker_version, which is sufficient."
+    echo "Docker version $docker_version is sufficient."
 fi
 
 # Check if buildx is installed
