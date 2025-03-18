@@ -1,0 +1,36 @@
+steps:
+  # QEMU 설정
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['run', '--rm', '--privileged', 'multiarch/qemu-user-static', '--reset', '-p', 'yes']
+
+  # Buildx 설정
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['buildx', 'create', '--use']
+
+  # Docker Hub 로그인
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['login', '-u', '$DOCKERHUB_USERNAME', '-p', '$DOCKERHUB_TOKEN']
+    env:
+      DOCKERHUB_USERNAME: $_DOCKERHUB_USERNAME
+      DOCKERHUB_TOKEN: $_DOCKERHUB_TOKEN
+
+  # 환경 변수 설정
+  - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "RELEASE=0.2" > /workspace/.env
+        echo "DOCKER_HUB_USERNAME=$_DOCKERHUB_USERNAME" >> /workspace/.env
+
+  # 빌드 및 푸시
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['buildx', 'bake', '-f', 'docker-bake.hcl', '--push']
+
+options:
+  machineType: 'E2_HIGHCPU_32'
+  diskSizeGb: '200' # 100GB 이상 처리 가능
+
+substitutions:
+  _DOCKERHUB_USERNAME: ${DOCKERHUB_USERNAME}
+  _DOCKERHUB_TOKEN: ${DOCKERHUB_TOKEN}
