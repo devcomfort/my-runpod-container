@@ -32,7 +32,7 @@ jobs:
           echo "RELEASE=0.2" >> $GITHUB_ENV
           echo "DOCKER_HUB_USERNAME=${{ vars.DOCKERHUB_USERNAME }}" >> $GITHUB_ENV
       - name: Build and push
-        uses: docker/build-push-action@v6
+        uses: docker/bake-action@v6.5.0
         with:
-          bake-file: ./docker-bake.hcl
+          files: ./docker-bake.hcl
           push: true
