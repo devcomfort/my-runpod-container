@@ -20,11 +20,6 @@ target "cpu" {
         "ghcr.io/${GHCR_USERNAME}/personal-runpod-environment:v${RELEASE}-cpu"
     ]
     platforms = ["linux/amd64", "linux/arm64"]
-    contexts = {
-        scripts = "./scripts"
-        proxy = "./proxy"
-        logo = "./logo"
-    }
     args = {
         BASE_release_version = "${RELEASE}"
         BASE_IMAGE = "ubuntu:20.04"
@@ -38,11 +33,6 @@ target "11-1-1" {
         "ghcr.io/${GHCR_USERNAME}/personal-runpod-environment:${RELEASE}-cuda11.1.1",
     ]
     platforms = ["linux/amd64"]
-    contexts = {
-        scripts = "./scripts"
-        proxy = "./proxy"
-        logo = "./logo"
-    }
     args = {
         BASE_RELEASE_VERSION = "${RELEASE}"
         BASE_IMAGE = "nvidia/cuda:11.1.1-devel-ubuntu20.04"
@@ -56,11 +46,6 @@ target "11-8-0" {
         "ghcr.io/${GHCR_USERNAME}/personal-runpod-environment:${RELEASE}-cuda11.8.0"
     ]
     platforms = ["linux/amd64"]
-    contexts = {
-        scripts = "./scripts"
-        proxy = "./proxy"
-        logo = "./logo"
-    }
     args = {
         BASE_RELEASE_VERSION = "${RELEASE}"
         BASE_IMAGE = "nvidia/cuda:11.8.0-devel-ubuntu22.04"
@@ -74,11 +59,6 @@ target "12-1-0" {
         "ghcr.io/${GHCR_USERNAME}/personal-runpod-environment:${RELEASE}-cuda12.1.0"
     ]
     platforms = ["linux/amd64"]
-    contexts = {
-        scripts = "./scripts"
-        proxy = "./proxy"
-        logo = "./logo"
-    }
     args = {
         BASE_RELEASE_VERSION = "${RELEASE}"
         BASE_IMAGE = "nvidia/cuda:12.1.0-devel-ubuntu22.04"
@@ -92,11 +72,6 @@ target "12-2-0" {
         "ghcr.io/${GHCR_USERNAME}/personal-runpod-environment:${RELEASE}-cuda12.2.0"
     ]
     platforms = ["linux/amd64"]
-    contexts = {
-        scripts = "./scripts"
-        proxy = "./proxy"
-        logo = "./logo"
-    }
     args = {
         BASE_RELEASE_VERSION = "${RELEASE}"
         BASE_IMAGE = "nvidia/cuda:12.2.0-devel-ubuntu22.04"
@@ -110,11 +85,6 @@ target "12-4-1" {
         "ghcr.io/${GHCR_USERNAME}/personal-runpod-environment:${RELEASE}-cuda12.4.1"
     ]
     platforms = ["linux/amd64"]
-    contexts = {
-        scripts = "./scripts"
-        proxy = "./proxy"
-        logo = "./logo"
-    }
     args = {
         BASE_RELEASE_VERSION = "${RELEASE}"
         BASE_IMAGE = "nvidia/cuda:12.4.1-devel-ubuntu22.04"
@@ -128,11 +98,6 @@ target "12-5-1" {
         "ghcr.io/${GHCR_USERNAME}/personal-runpod-environment:${RELEASE}-cuda12.5.1"
     ]
     platforms = ["linux/amd64"]
-    contexts = {
-        scripts = "./scripts"
-        proxy = "./proxy"
-        logo = "./logo"
-    }
     args = {
         BASE_RELEASE_VERSION = "${RELEASE}"
         BASE_IMAGE = "nvidia/cuda:12.5.1-devel-ubuntu22.04"
@@ -146,11 +111,6 @@ target "12-6-2" {
         "ghcr.io/${GHCR_USERNAME}/personal-runpod-environment:${RELEASE}-cuda12.6.2"
     ]
     platforms = ["linux/amd64"]
-    contexts = {
-        scripts = "./scripts"
-        proxy = "./proxy"
-        logo = "./logo"
-    }
     args = {
         BASE_RELEASE_VERSION = "${RELEASE}"
         BASE_IMAGE = "nvidia/cuda:12.6.2-devel-ubuntu22.04"

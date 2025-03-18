@@ -134,13 +134,13 @@ RUN wget -O init-deb.sh https://www.linode.com/docs/assets/660-init-deb.sh && \
     /usr/sbin/update-rc.d -f nginx defaults
 
 # === 프록시 설정 파일 복사 ===
-COPY --from=proxy nginx.conf /etc/nginx/nginx.conf
-COPY --from=proxy readme.html /usr/share/nginx/html/readme.html
+COPY ./proxy/nginx.conf /etc/nginx/nginx.conf
+COPY ./proxy/readme.html /usr/share/nginx/html/readme.html
 COPY README.md /usr/share/nginx/html/README.md
 
 # === 시작 스크립트 설정 ===
-COPY --from=scripts post_start.sh /
-COPY --from=scripts start.sh /
+COPY ./scripts/post_start.sh /
+COPY ./scripts/start.sh /
 RUN chmod +x /start.sh
 
 # === 컨테이너 포트 노출 ===
