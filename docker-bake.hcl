@@ -14,6 +14,7 @@ group "default" {
 target "cpu" {
     dockerfile = "Dockerfile"
     tags = ["${DOCKER_HUB_USERNAME}/personal-runpod-environment:${RELEASE}-cpu"]
+    platforms = ["linux/amd64", "linux/arm64"]
     contexts = {
         scripts = "./scripts"
         proxy = "./proxy"
@@ -28,6 +29,7 @@ target "cpu" {
 target "11-1-1" {
     dockerfile = "Dockerfile"
     tags = ["${DOCKER_HUB_USERNAME}/personal-runpod-environment:${RELEASE}-cuda11.1.1"]
+    platforms = ["linux/amd64"]
     contexts = {
         scripts = "./scripts"
         proxy = "./proxy"
@@ -42,6 +44,7 @@ target "11-1-1" {
 target "11-8-0" {
     dockerfile = "Dockerfile"
     tags = ["${DOCKER_HUB_USERNAME}/personal-runpod-environment:${RELEASE}-cuda11.8.0"]
+    platforms = ["linux/amd64"]
     contexts = {
         scripts = "./scripts"
         proxy = "./proxy"
@@ -56,6 +59,7 @@ target "11-8-0" {
 target "12-1-0" {
     dockerfile = "Dockerfile"
     tags = ["${DOCKER_HUB_USERNAME}/personal-runpod-environment:${RELEASE}-cuda12.1.0"]
+    platforms = ["linux/amd64"]
     contexts = {
         scripts = "./scripts"
         proxy = "./proxy"
@@ -70,6 +74,7 @@ target "12-1-0" {
 target "12-2-0" {
     dockerfile = "Dockerfile"
     tags = ["${DOCKER_HUB_USERNAME}/personal-runpod-environment:${RELEASE}-cuda12.2.0"]
+    platforms = ["linux/amd64"]
     contexts = {
         scripts = "./scripts"
         proxy = "./proxy"
@@ -84,6 +89,7 @@ target "12-2-0" {
 target "12-4-1" {
     dockerfile = "Dockerfile"
     tags = ["${DOCKER_HUB_USERNAME}/personal-runpod-environment:${RELEASE}-cuda12.4.1"]
+    platforms = ["linux/amd64"]
     contexts = {
         scripts = "./scripts"
         proxy = "./proxy"
@@ -98,6 +104,7 @@ target "12-4-1" {
 target "12-5-1" {
     dockerfile = "Dockerfile"
     tags = ["${DOCKER_HUB_USERNAME}/personal-runpod-environment:${RELEASE}-cuda12.5.1"]
+    platforms = ["linux/amd64"]
     contexts = {
         scripts = "./scripts"
         proxy = "./proxy"
@@ -112,6 +119,7 @@ target "12-5-1" {
 target "12-6-2" {
     dockerfile = "Dockerfile"
     tags = ["${DOCKER_HUB_USERNAME}/personal-runpod-environment:${RELEASE}-cuda12.6.2"]
+    platforms = ["linux/amd64"]
     contexts = {
         scripts = "./scripts"
         proxy = "./proxy"
