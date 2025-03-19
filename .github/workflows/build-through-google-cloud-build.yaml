@@ -12,18 +12,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # Google Cloud Platform CLI(gcloud) 로그인
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
           credentials_json: '${{ secrets.GCP_SA_KEY }}'
 
+      # gcloud 타겟 프로젝트 설정
       - name: Set up Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: '${{ secrets.GCP_PROJECT_ID }}'
+
+      # Google Cloud Build 실행
       - name: Trigger Google Cloud Build
         run: |
-          gcloud builds submit --config cloudbuild.yaml .
-        env:
-          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
-          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          gcloud builds submit --config cloudbuild.yaml \
+            --substitutions _DOCKERHUB_USERNAME="${{ vars.DOCKERHUB_USERNAME }}",_DOCKERHUB_TOKEN="${{ secrets.DOCKERHUB_TOKEN }}" .
