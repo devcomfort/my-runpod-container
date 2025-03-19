@@ -4,21 +4,21 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['buildx', 'create', '--use']
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['login', '-u', '$DOCKERHUB_USERNAME', '-p', '$DOCKERHUB_TOKEN']
+    args: ['login', '-u', '$_DOCKERHUB_USERNAME', '-p', '$_DOCKERHUB_TOKEN']
     env:
-      - 'DOCKERHUB_USERNAME=$DOCKERHUB_USERNAME'
-      - 'DOCKERHUB_TOKEN=$DOCKERHUB_TOKEN'
+      - 'DOCKERHUB_USERNAME=$_DOCKERHUB_USERNAME'
+      - 'DOCKERHUB_TOKEN=$_DOCKERHUB_TOKEN'
   - name: 'gcr.io/cloud-builders/docker'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
         echo "RELEASE=0.2" > /workspace/.env
-        echo "DOCKER_HUB_USERNAME=$DOCKERHUB_USERNAME" >> /workspace/.env
+        echo "DOCKER_HUB_USERNAME=$_DOCKERHUB_USERNAME" >> /workspace/.env
   - name: 'gcr.io/cloud-builders/docker'
     args: ['buildx', 'bake', '-f', 'docker-bake.hcl', '--push']
 options:
-  machineType: 'E2_HIGHCPU_32'
+  machineType: 'e2-standard-2'
   diskSizeGb: '200'
 
 substitutions:
