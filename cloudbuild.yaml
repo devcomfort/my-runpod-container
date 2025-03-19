@@ -1,27 +1,44 @@
 steps:
+  # 멀티 아키텍처 에뮬레이션 설정
   - name: 'gcr.io/cloud-builders/docker'
     args: ['run', '--rm', '--privileged', 'multiarch/qemu-user-static', '--reset', '-p', 'yes']
+
+  # Docker buildx 빌더 생성 및 기본으로 설정
   - name: 'gcr.io/cloud-builders/docker'
     args: ['buildx', 'create', '--use']
+
+  # Docker Hub 로그인 (Secret Manager에서 자격 증명 가져옴)
   - name: 'gcr.io/cloud-builders/docker'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
-        echo "$_DOCKERHUB_TOKEN" | docker login -u "$_DOCKERHUB_USERNAME" --password-stdin
+        echo "$$DOCKERHUB_TOKEN" | docker login -u "$$DOCKERHUB_USERNAME" --password-stdin
+    secretEnv: ['DOCKERHUB_USERNAME', 'DOCKERHUB_TOKEN']
+
+  # .env 파일 생성 (DOCKERHUB_USERNAME을 Secret Manager에서 가져옴)
   - name: 'gcr.io/cloud-builders/docker'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
         echo "RELEASE=0.2" > /workspace/.env
-        echo "DOCKER_HUB_USERNAME=$_DOCKERHUB_USERNAME" >> /workspace/.env
+        echo "DOCKER_HUB_USERNAME=$$DOCKERHUB_USERNAME" >> /workspace/.env
+    secretEnv: ['DOCKERHUB_USERNAME']
+
+  # Docker 이미지 빌드 및 푸시
   - name: 'gcr.io/cloud-builders/docker'
     args: ['buildx', 'bake', '-f', 'docker-bake.hcl', '--push']
+
+# 빌드 옵션
 options:
-  machineType: 'e2-highcpu-8'  # 더 많은 CPU를 가진 인스턴스 타입
+  machineType: 'e2-highcpu-8'
   diskSizeGb: '200'
 
-substitutions:
-  _DOCKERHUB_USERNAME: ""
-  _DOCKERHUB_TOKEN: ""
+# Secret Manager에서 사용할 비밀 정의
+availableSecrets:
+  secretManager:
+    - versionName: projects/$PROJECT_ID/secrets/dockerhub-username/versions/latest
+      env: 'DOCKERHUB_USERNAME'
+    - versionName: projects/$PROJECT_ID/secrets/dockerhub-token/versions/latest
+      env: 'DOCKERHUB_TOKEN'
