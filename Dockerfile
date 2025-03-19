@@ -93,7 +93,7 @@ COPY src/* /usr/local/bin/
 
 # === webinstall.sh를 통한 유틸리티 설치 ===
 # ollama
-RUN curl -fsSL https://ollama.com/install.sh | bash
+RUN curl -sS https://webi.sh/ollama | bash
 # gh (GitHub CLI)
 RUN curl -sS https://webi.sh/gh | bash
 # golang
