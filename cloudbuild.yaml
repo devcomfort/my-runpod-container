@@ -34,7 +34,7 @@ steps:
 options:
   machineType: 'E2_HIGHCPU_8'
   diskSizeGb: '200'
-  logging: NONE
+  logging: CLOUD_LOGGING_ONLY
 
 # Secret Manager에서 사용할 비밀 정의
 availableSecrets:
