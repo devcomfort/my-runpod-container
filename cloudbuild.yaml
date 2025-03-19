@@ -1,36 +1,26 @@
 steps:
-  # 1. QEMU 설정 (멀티 아키텍처 지원)
   - name: 'gcr.io/cloud-builders/docker'
     args: ['run', '--rm', '--privileged', 'multiarch/qemu-user-static', '--reset', '-p', 'yes']
-
-  # 2. Buildx 설정
   - name: 'gcr.io/cloud-builders/docker'
     args: ['buildx', 'create', '--use']
-
-  # 3. Docker Hub 로그인
   - name: 'gcr.io/cloud-builders/docker'
     args: ['login', '-u', '$DOCKERHUB_USERNAME', '-p', '$DOCKERHUB_TOKEN']
     env:
-      - 'DOCKERHUB_USERNAME=$_DOCKERHUB_USERNAME'
-      - 'DOCKERHUB_TOKEN=$_DOCKERHUB_TOKEN'
-
-  # 4. 환경 변수 설정
+      - 'DOCKERHUB_USERNAME=$DOCKERHUB_USERNAME'
+      - 'DOCKERHUB_TOKEN=$DOCKERHUB_TOKEN'
   - name: 'gcr.io/cloud-builders/docker'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
         echo "RELEASE=0.2" > /workspace/.env
-        echo "DOCKER_HUB_USERNAME=$_DOCKERHUB_USERNAME" >> /workspace/.env
-
-  # 5. Docker 이미지 빌드 및 Docker Hub로 푸시
+        echo "DOCKER_HUB_USERNAME=$DOCKERHUB_USERNAME" >> /workspace/.env
   - name: 'gcr.io/cloud-builders/docker'
     args: ['buildx', 'bake', '-f', 'docker-bake.hcl', '--push']
-
 options:
   machineType: 'E2_HIGHCPU_32'
-  diskSizeGb: '200' # 100GB 이상 처리 가능
+  diskSizeGb: '200'
 
 substitutions:
-  _DOCKERHUB_USERNAME: ""
-  _DOCKERHUB_TOKEN: ""
+  _DOCKERHUB_USERNAME: ""  # 사용자 정의 대체 변수 정의
+  _DOCKERHUB_TOKEN: ""     # 사용자 정의 대체 변수 정의

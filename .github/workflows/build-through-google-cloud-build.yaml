@@ -21,8 +21,9 @@ jobs:
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: '${{ secrets.GCP_PROJECT_ID }}'
-
       - name: Trigger Google Cloud Build
         run: |
-          gcloud builds submit --config cloudbuild.yaml \
-            --substitutions _DOCKERHUB_USERNAME="${{ vars.DOCKERHUB_USERNAME }}",_DOCKERHUB_TOKEN="${{ secrets.DOCKERHUB_TOKEN }}" .
+          gcloud builds submit --config cloudbuild.yaml .
+        env:
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
