@@ -38,6 +38,7 @@ else
     echo "Docker version $docker_version is sufficient."
 fi
 
+# TODO: buildx 최신 버전을 설치하도록 변경하기.
 # Check if buildx is installed
 if ! docker buildx version >/dev/null 2>&1; then
     echo "Installing buildx..."
