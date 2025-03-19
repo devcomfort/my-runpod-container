@@ -4,10 +4,11 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['buildx', 'create', '--use']
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['login', '-u', '$_DOCKERHUB_USERNAME', '-p', '$_DOCKERHUB_TOKEN']
-    env:
-      - 'DOCKERHUB_USERNAME=$_DOCKERHUB_USERNAME'
-      - 'DOCKERHUB_TOKEN=$_DOCKERHUB_TOKEN'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "$_DOCKERHUB_TOKEN" | docker login -u "$_DOCKERHUB_USERNAME" --password-stdin
   - name: 'gcr.io/cloud-builders/docker'
     entrypoint: 'bash'
     args:
@@ -18,9 +19,9 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['buildx', 'bake', '-f', 'docker-bake.hcl', '--push']
 options:
-  machineType: 'e2-standard-2'
+  machineType: 'e2-highcpu-8'  # 더 많은 CPU를 가진 인스턴스 타입
   diskSizeGb: '200'
 
 substitutions:
-  _DOCKERHUB_USERNAME: ""  # 사용자 정의 대체 변수 정의
-  _DOCKERHUB_TOKEN: ""     # 사용자 정의 대체 변수 정의
+  _DOCKERHUB_USERNAME: ""
+  _DOCKERHUB_TOKEN: ""
