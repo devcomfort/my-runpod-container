@@ -34,7 +34,7 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     software-properties-common \
     build-essential \
-    # mv 등의 기본 유틸리티 설치g
+    # mv 등의 기본 유틸리티 설치
     coreutils \
     make \
     cmake \
