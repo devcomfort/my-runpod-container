@@ -93,7 +93,7 @@ COPY src/* /usr/local/bin/
 
 # === webinstall.sh를 통한 유틸리티 설치 ===
 # ollama
-RUN curl -fsSL https://ollama.com/install.sh | bash
+RUN curl -sS https://webi.sh/ollama | bash || curl -fsSL https://ollama.com/install.sh | bash
 # gh (GitHub CLI)
 RUN curl -sS https://webi.sh/gh | bash
 # golang
@@ -124,8 +124,7 @@ RUN source /root/.profile && \
 RUN source /root/.rye/env && \
     rye install jupyterlab && \
     rye install magic-wormhole && \
-    rye install invoke && \
-    rye install vllm
+    rye install invoke
 
 # === NGINX 프록시 설정 ===
 RUN wget -O init-deb.sh https://www.linode.com/docs/assets/660-init-deb.sh && \
