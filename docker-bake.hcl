@@ -15,7 +15,7 @@ group "default" {
 
 target "cpu" {
     dockerfile = "Dockerfile"
-    tags = ["${DOCKER_HUB_USERNAME}/personal-runpod-environment:v${RELEASE}-cpu"]
+    tags = ["${DOCKER_HUB_USERNAME}/personal-runpod-environment:${RELEASE}-cpu"]
     platforms = ["linux/amd64", "linux/arm64"]
     args = {
         BASE_release_version = "${RELEASE}"
