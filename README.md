@@ -49,9 +49,28 @@ personal-runpod-image/
 | [📖 **전체 가이드**](docs/README.md) | 상세한 프로젝트 문서 |
 | [🚀 **Just 사용법**](docs/guides/just-usage.md) | Just 명령 실행기 가이드 |
 | [🔧 **개발 가이드**](docs/guides/development.md) | 개발 환경 설정 |
+| [🤖 **PR 자동 머지**](docs/guides/pr-auto-merge.md) | 자동 머지 시스템 가이드 |
 | [⚙️ **도구 관리**](docs/guides/tool-management.md) | 버전 관리 및 도구 분류 |
 | [🧪 **Shell 테스트**](docs/shell-testing.md) | Shell 테스트 시스템 |
 | [📋 **요구사항**](docs/guides/dev-requirements.md) | 개발 환경 요구사항 |
+
+## 🤖 **자동 머지 시스템**
+
+> **✨ 새로운 기능**: PR이 모든 테스트와 빌드를 통과하면 **자동으로 main 브랜치에 머지**됩니다!
+
+### 🔄 **자동 머지 조건**
+- ✅ **🧪 Shell 테스트 통과** (73개 테스트 케이스)
+- ✅ **🐳 Docker 빌드 성공** (모든 아키텍처)
+- ✅ **📋 PR 상태 정상** (Draft 아님, 충돌 없음)
+
+```bash
+# PR 생성 후 모든 체크가 통과하면
+# 🤖 자동으로 승인 및 머지됩니다!
+git checkout -b feature/new-feature
+# ... 개발 작업 ...
+git push origin feature/new-feature
+# → GitHub에서 PR 생성 → 자동 테스트 → 자동 머지 🎉
+```
 
 ## 🚀 개발 워크플로우
 

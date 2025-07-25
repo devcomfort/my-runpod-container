@@ -1,0 +1,227 @@
+name: 🤖 PR Auto-Merge
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main]
+  workflow_run:
+    workflows: ["🐳 Build and Push Multi-Architecture Images", "🧪 Shell Tests"]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: read
+  actions: read
+
+jobs:
+  # 🔍 PR 상태 및 자격 요건 체크
+  check-pr-requirements:
+    name: 🔍 Check PR Requirements
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    outputs:
+      should_automerge: ${{ steps.check.outputs.should_automerge }}
+      pr_number: ${{ steps.check.outputs.pr_number }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Check PR requirements
+        id: check
+        run: |
+          echo "🔍 PR 자격 요건 확인 중..."
+          
+          # PR 정보 가져오기
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          PR_AUTHOR="${{ github.event.pull_request.user.login }}"
+          PR_DRAFT="${{ github.event.pull_request.draft }}"
+          PR_MERGEABLE="${{ github.event.pull_request.mergeable }}"
+          
+          echo "📋 PR 정보:"
+          echo "  - PR Number: $PR_NUMBER"
+          echo "  - Author: $PR_AUTHOR"
+          echo "  - Draft: $PR_DRAFT"
+          echo "  - Mergeable: $PR_MERGEABLE"
+          
+          # 자동 머지 가능 여부 판단
+          SHOULD_AUTOMERGE="false"
+          
+          # Draft PR은 자동 머지하지 않음
+          if [[ "$PR_DRAFT" == "true" ]]; then
+            echo "❌ Draft PR은 자동 머지하지 않습니다"
+          # Mergeable하지 않으면 자동 머지하지 않음
+          elif [[ "$PR_MERGEABLE" == "false" ]]; then
+            echo "❌ 충돌이 있어 자동 머지할 수 없습니다"
+          else
+            echo "✅ 자동 머지 자격 요건을 만족합니다"
+            SHOULD_AUTOMERGE="true"
+          fi
+          
+          echo "should_automerge=$SHOULD_AUTOMERGE" >> $GITHUB_OUTPUT
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+
+  # ⏳ 모든 체크 완료 대기 및 머지 실행
+  auto-merge:
+    name: 🤖 Auto Merge
+    runs-on: ubuntu-latest
+    needs: [check-pr-requirements]
+    if: |
+      always() && 
+      (github.event_name == 'workflow_run' || needs.check-pr-requirements.outputs.should_automerge == 'true')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Get PR information
+        id: pr-info
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_run" ]]; then
+            # workflow_run 이벤트에서 PR 정보 찾기
+            PR_NUMBER=$(gh pr list --state open --base main --json number,headRefName | jq -r ".[] | select(.headRefName == \"${{ github.event.workflow_run.head_branch }}\") | .number")
+          else
+            PR_NUMBER="${{ needs.check-pr-requirements.outputs.pr_number }}"
+          fi
+          
+          if [[ -z "$PR_NUMBER" || "$PR_NUMBER" == "null" ]]; then
+            echo "❌ 연관된 PR을 찾을 수 없습니다"
+            exit 1
+          fi
+          
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          echo "📋 처리할 PR: #$PR_NUMBER"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Wait for all checks to complete
+        id: wait-checks
+        run: |
+          echo "⏳ 모든 체크 완료 대기 중..."
+          
+          PR_NUMBER="${{ steps.pr-info.outputs.pr_number }}"
+          MAX_WAIT=1800  # 30분 최대 대기
+          WAIT_INTERVAL=30  # 30초 간격
+          elapsed=0
+          
+          while [[ $elapsed -lt $MAX_WAIT ]]; do
+            echo "🔍 체크 상태 확인 중... (경과 시간: ${elapsed}s)"
+            
+            # PR의 모든 체크 상태 가져오기
+            CHECK_RUNS=$(gh api repos/${{ github.repository }}/pulls/$PR_NUMBER/commits | jq -r '.[0].sha' | xargs -I {} gh api repos/${{ github.repository }}/commits/{}/check-runs --jq '.check_runs')
+            
+            # 필수 워크플로우 체크
+            REQUIRED_CHECKS=("🐳 Build and Push Multi-Architecture Images" "🧪 Shell Tests")
+            ALL_PASSED=true
+            PENDING_CHECKS=()
+            
+            for check_name in "${REQUIRED_CHECKS[@]}"; do
+              STATUS=$(echo "$CHECK_RUNS" | jq -r ".[] | select(.name == \"$check_name\") | .status")
+              CONCLUSION=$(echo "$CHECK_RUNS" | jq -r ".[] | select(.name == \"$check_name\") | .conclusion")
+              
+              echo "  - $check_name: $STATUS ($CONCLUSION)"
+              
+              if [[ "$STATUS" == "in_progress" || "$STATUS" == "queued" ]]; then
+                PENDING_CHECKS+=("$check_name")
+                ALL_PASSED=false
+              elif [[ "$CONCLUSION" != "success" ]]; then
+                echo "❌ $check_name 체크가 실패했습니다: $CONCLUSION"
+                echo "all_checks_passed=false" >> $GITHUB_OUTPUT
+                exit 0
+              fi
+            done
+            
+            if [[ "$ALL_PASSED" == "true" ]]; then
+              echo "✅ 모든 필수 체크가 통과했습니다!"
+              echo "all_checks_passed=true" >> $GITHUB_OUTPUT
+              break
+            fi
+            
+            echo "⏳ 대기 중인 체크: ${PENDING_CHECKS[*]}"
+            sleep $WAIT_INTERVAL
+            elapsed=$((elapsed + WAIT_INTERVAL))
+          done
+          
+          if [[ $elapsed -ge $MAX_WAIT ]]; then
+            echo "⏰ 최대 대기 시간 초과"
+            echo "all_checks_passed=false" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Auto-approve and merge PR
+        if: steps.wait-checks.outputs.all_checks_passed == 'true'
+        run: |
+          PR_NUMBER="${{ steps.pr-info.outputs.pr_number }}"
+          
+          echo "🎯 PR #$PR_NUMBER 자동 승인 및 머지 실행..."
+          
+          # PR 승인
+          echo "✅ PR 승인 중..."
+          gh pr review $PR_NUMBER --approve --body "🤖 모든 체크가 통과하여 자동 승인되었습니다.
+
+          ✅ **통과한 체크:**
+          - 🐳 Docker 빌드 및 푸시
+          - 🧪 Shell 테스트
+          
+          🚀 자동 머지를 진행합니다."
+          
+          # PR 머지 (squash merge 사용)
+          echo "🔄 PR 머지 중..."
+          gh pr merge $PR_NUMBER --squash --auto --delete-branch
+          
+          echo "🎉 PR #$PR_NUMBER이 성공적으로 main 브랜치로 머지되었습니다!"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Notify merge failure
+        if: steps.wait-checks.outputs.all_checks_passed != 'true'
+        run: |
+          PR_NUMBER="${{ steps.pr-info.outputs.pr_number }}"
+          
+          echo "❌ PR #$PR_NUMBER 자동 머지 실패"
+          
+          # PR에 실패 사유 코멘트 추가
+          gh pr comment $PR_NUMBER --body "❌ **자동 머지 실패**
+
+          일부 체크가 실패했거나 완료되지 않아 자동 머지할 수 없습니다.
+
+          🔍 **확인사항:**
+          - 모든 체크가 통과했는지 확인해주세요
+          - 충돌이 있는지 확인해주세요
+          - Draft 상태가 아닌지 확인해주세요
+          
+          ✅ 모든 문제를 해결한 후 다시 푸시하면 자동 머지가 재시도됩니다."
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # 📊 머지 결과 요약
+  merge-summary:
+    name: 📊 Merge Summary
+    runs-on: ubuntu-latest
+    needs: [auto-merge]
+    if: always()
+    steps:
+      - name: Generate merge summary
+        run: |
+          echo "## 🤖 PR 자동 머지 요약" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ needs.auto-merge.result }}" == "success" ]]; then
+            echo "✅ **자동 머지 성공**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "모든 체크가 통과하여 PR이 성공적으로 main 브랜치로 머지되었습니다." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **자동 머지 실패**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "일부 체크가 실패했거나 요구사항을 만족하지 않아 자동 머지되지 않았습니다." >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📋 자동 머지 조건" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ 🐳 Docker 빌드 및 푸시 성공" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ 🧪 Shell 테스트 통과" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Draft 상태가 아님" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ 충돌이 없음" >> $GITHUB_STEP_SUMMARY 
