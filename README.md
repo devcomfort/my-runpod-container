@@ -7,8 +7,8 @@
 
 ### 🚀 Just 명령 실행기 사용 (권장)
 ```bash
-# Just 설치 (Ubuntu/Debian)
-sudo apt update && sudo apt install just
+# Just 설치 (uv 패키지 관리자)
+uv add --dev rust-just
 
 # 1. 개발 환경 전체 설정
 just dev-setup

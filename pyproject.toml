@@ -9,6 +9,7 @@ dependencies = []
 [dependency-groups]
 dev = [
     "lefthook>=1.12.2",
+    "rust-just>=1.42.0",
 ]
 
 # 🚀 Just 명령 실행기 통합
