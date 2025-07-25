@@ -1,0 +1,163 @@
+name: 🚀 Dev to Main Auto-Merge
+
+on:
+  workflow_run:
+    workflows: ["🐳 Build and Push Multi-Architecture Images", "🧪 Shell Tests"]
+    types: [completed]
+    branches: [dev]
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: read
+
+jobs:
+  auto-merge-dev-to-main:
+    name: 🚀 Auto Merge Dev to Main
+    runs-on: ubuntu-latest
+    if: |
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'dev'
+    steps:
+      - name: Checkout dev branch
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+          
+      - name: Check if all required workflows succeeded
+        id: check-workflows
+        run: |
+          echo "🔍 dev 브랜치의 모든 워크플로우 성공 여부 확인..."
+          
+          # 최신 dev 브랜치 커밋의 SHA 가져오기
+          DEV_SHA=$(git rev-parse dev)
+          echo "Dev branch SHA: $DEV_SHA"
+          
+          # 필수 워크플로우들이 모두 성공했는지 확인
+          REQUIRED_WORKFLOWS=("🐳 Build and Push Multi-Architecture Images" "🧪 Shell Tests")
+          ALL_SUCCESS=true
+          
+          for workflow in "${REQUIRED_WORKFLOWS[@]}"; do
+            echo "🔍 $workflow 상태 확인 중..."
+            
+            # 해당 워크플로우의 최신 실행 결과 확인
+            CONCLUSION=$(gh api repos/${{ github.repository }}/actions/workflows \
+              --jq ".workflows[] | select(.name == \"$workflow\") | .id" | \
+              xargs -I {} gh api repos/${{ github.repository }}/actions/workflows/{}/runs \
+              --jq ".workflow_runs[] | select(.head_sha == \"$DEV_SHA\") | .conclusion" | head -n1)
+            
+            echo "  - $workflow: $CONCLUSION"
+            
+            if [[ "$CONCLUSION" != "success" ]]; then
+              echo "❌ $workflow가 성공하지 않음: $CONCLUSION"
+              ALL_SUCCESS=false
+              break
+            fi
+          done
+          
+          if [[ "$ALL_SUCCESS" == "true" ]]; then
+            echo "✅ 모든 필수 워크플로우가 성공했습니다!"
+            echo "should_merge=true" >> $GITHUB_OUTPUT
+          else
+            echo "❌ 일부 워크플로우가 실패했습니다."
+            echo "should_merge=false" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Create and merge PR to main
+        if: steps.check-workflows.outputs.should_merge == 'true'
+        run: |
+          echo "🚀 dev → main 자동 머지 시작..."
+          
+          # 기존 dev → main PR이 있는지 확인
+          EXISTING_PR=$(gh pr list --base main --head dev --state open --json number --jq '.[0].number // empty')
+          
+          if [[ -n "$EXISTING_PR" ]]; then
+            echo "📋 기존 PR #$EXISTING_PR 발견"
+            PR_NUMBER=$EXISTING_PR
+          else
+            echo "🆕 새로운 PR 생성 중..."
+            
+            # 최신 커밋 메시지 가져오기
+            COMMIT_MSG=$(git log --oneline -1 dev | cut -d' ' -f2-)
+            
+            # PR 생성
+            PR_NUMBER=$(gh pr create \
+              --base main \
+              --head dev \
+              --title "🚀 Auto-merge: $COMMIT_MSG" \
+              --body "🤖 **자동 생성된 PR**
+
+            이 PR은 dev 브랜치의 모든 테스트와 빌드가 성공한 후 자동으로 생성되었습니다.
+
+            ## ✅ 통과한 체크
+            - 🐳 Docker 빌드 및 푸시: ✅ 성공
+            - 🧪 Shell 테스트: ✅ 성공
+
+            ## 📋 변경사항
+            - 최신 커밋: \`$(git log --oneline -1 dev)\`
+            - 브랜치: \`dev\` → \`main\`
+
+            🔄 자동 머지가 곧 진행됩니다..." \
+              --json number --jq '.number')
+            
+            echo "✅ PR #$PR_NUMBER 생성 완료"
+          fi
+          
+          # PR 자동 승인
+          echo "✅ PR #$PR_NUMBER 자동 승인 중..."
+          gh pr review $PR_NUMBER --approve --body "🤖 모든 체크가 통과하여 자동 승인되었습니다."
+          
+          # PR 머지 (squash merge)
+          echo "🔄 PR #$PR_NUMBER 머지 중..."
+          gh pr merge $PR_NUMBER --squash --auto --delete-branch=false
+          
+          echo "🎉 dev 브랜치가 성공적으로 main으로 머지되었습니다!"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Notify merge failure
+        if: steps.check-workflows.outputs.should_merge != 'true'
+        run: |
+          echo "❌ dev → main 자동 머지 실패"
+          echo "일부 워크플로우가 실패했거나 완료되지 않았습니다."
+          
+          # GitHub 이슈나 알림을 통해 실패 통지 (선택사항)
+          echo "🔍 실패 원인을 확인하세요:"
+          echo "  - 🐳 Build and Push 워크플로우 상태"
+          echo "  - 🧪 Shell Tests 워크플로우 상태"
+
+  # 📊 머지 결과 요약
+  merge-summary:
+    name: 📊 Dev to Main Merge Summary
+    runs-on: ubuntu-latest
+    needs: [auto-merge-dev-to-main]
+    if: always()
+    steps:
+      - name: Generate summary
+        run: |
+          echo "## 🚀 Dev to Main 자동 머지 요약" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ needs.auto-merge-dev-to-main.result }}" == "success" ]]; then
+            echo "✅ **자동 머지 성공**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "dev 브랜치의 모든 체크가 통과하여 main 브랜치로 성공적으로 머지되었습니다." >> $GITHUB_STEP_SUMMARY
+          elif [[ "${{ needs.auto-merge-dev-to-main.result }}" == "skipped" ]]; then
+            echo "⏭️ **머지 건너뜀**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "워크플로우가 실패했거나 조건을 만족하지 않아 머지가 건너뛰어졌습니다." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **자동 머지 실패**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "자동 머지 중 오류가 발생했습니다." >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📋 자동 머지 조건" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ dev 브랜치에서 실행" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ 🐳 Docker 빌드 및 푸시 성공" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ 🧪 Shell 테스트 통과" >> $GITHUB_STEP_SUMMARY 

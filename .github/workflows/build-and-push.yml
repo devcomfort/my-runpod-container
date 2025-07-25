@@ -2,7 +2,7 @@ name: 🐳 Build and Push Multi-Architecture Images
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, dev ]  # dev 브랜치 추가
     tags: [ 'v*' ]
   pull_request:
     branches: [ main ]
