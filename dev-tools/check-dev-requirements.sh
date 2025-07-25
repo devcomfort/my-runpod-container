@@ -206,7 +206,7 @@ main() {
     if [ -f "../docker-bake.hcl" ]; then
         log_info "✅ docker-bake.hcl 파일 존재"
         ((CHECKS_PASSED++))
-
+        
         # 기본 구문 검사 (상위 디렉토리에서 실행)
         if (cd .. && docker buildx bake --print cpu >/dev/null 2>&1); then
             log_info "✅ docker-bake.hcl 구문 정상"
@@ -247,7 +247,7 @@ main() {
         echo "   - 빌드 도구: 정상"  
         echo "   - 프로젝트 파일: 정상"
         echo
-                            log_info "다음 단계:"
+        log_info "다음 단계:"
                     echo "   cd .. && docker buildx bake --print cpu  # 빌드 설정 확인"
                     echo "   cd .. && docker buildx bake cpu          # 실제 빌드 테스트"
         exit 0

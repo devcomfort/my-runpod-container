@@ -84,32 +84,32 @@ is_ci_environment() {
 
 # Check if Docker is installed
 check_docker() {
-    if ! command -v docker >/dev/null; then
+if ! command -v docker >/dev/null; then
         log_error "Docker is not installed. Please install Docker first."
-        exit 1
-    fi
-    
-    # Check Docker version
-    docker_version=$(docker --version | awk '{print $3}' | cut -d',' -f1)
+    exit 1
+fi
+
+# Check Docker version
+docker_version=$(docker --version | awk '{print $3}' | cut -d',' -f1)
     log_info "Detected Docker version: $docker_version"
-    
-    # Function to compare versions
-    version_ge() {
-        # $1: current version, $2: minimum required version
-        [ "$(printf '%s\n' "$1" "$2" | sort -V | head -n1)" = "$2" ]
-    }
-    
-    if ! version_ge "$docker_version" "19.03"; then
+
+# Function to compare versions
+version_ge() {
+    # $1: current version, $2: minimum required version
+    [ "$(printf '%s\n' "$1" "$2" | sort -V | head -n1)" = "$2" ]
+}
+
+if ! version_ge "$docker_version" "19.03"; then
         log_error "Docker version must be 19.03 or higher."
-        exit 1
-    else
+    exit 1
+else
         log_info "Docker version $docker_version is sufficient."
-    fi
+fi
 }
 
 # Install or check buildx
 setup_buildx() {
-    # Check if buildx is functional
+# Check if buildx is functional
     if docker buildx version >/dev/null 2>&1; then
         log_info "buildx is already functional."
         return 0
@@ -179,10 +179,10 @@ setup_buildx() {
     # Verify installation
     if docker buildx version >/dev/null 2>&1; then
         log_info "buildx installation successful."
-    else
+else
         log_error "buildx installation failed."
         exit 1
-    fi
+fi
 }
 
 # Install emulator for multi-architecture support
@@ -237,7 +237,7 @@ setup_builder() {
         docker buildx create --name "$builder_name" --bootstrap --use
     fi
     
-    check_command
+check_command
     
     log_info "Builder '$builder_name' created and activated."
 }
@@ -254,7 +254,7 @@ verify_setup() {
         log_info "Supported platforms: $platforms"
         
         # Check for multi-architecture support
-        if echo "$platforms" | grep -q ","; then
+if echo "$platforms" | grep -q ","; then
             log_info "✅ Multi-architecture setup is complete."
             
             # Additional verification for key platforms
