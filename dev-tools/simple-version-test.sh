@@ -22,9 +22,9 @@ fi
 # .versions.env 로드
 source "$VERSIONS_FILE"
 echo "✅ .versions.env 로드 성공 (경로: $VERSIONS_FILE)"
-echo "   GO_VERSION=$GO_VERSION"
-echo "   TINYGO_VERSION=$TINYGO_VERSION"  
-echo "   GH_VERSION=$GH_VERSION"
+    echo "   GO_VERSION=$GO_VERSION"
+    echo "   TINYGO_VERSION=$TINYGO_VERSION"  
+    echo "   GH_VERSION=$GH_VERSION"
 
 echo ""
 

@@ -233,12 +233,12 @@ main() {
             fi
         else
             # 상위 디렉토리에 있는 경우
-            if (cd .. && docker buildx bake --print cpu >/dev/null 2>&1); then
-                log_info "✅ docker-bake.hcl 구문 정상"
-                ((CHECKS_PASSED++))
-            else
-                log_error "❌ docker-bake.hcl 구문 오류"
-                ((CHECKS_FAILED++))
+        if (cd .. && docker buildx bake --print cpu >/dev/null 2>&1); then
+            log_info "✅ docker-bake.hcl 구문 정상"
+            ((CHECKS_PASSED++))
+        else
+            log_error "❌ docker-bake.hcl 구문 오류"
+            ((CHECKS_FAILED++))
             fi
         fi
     else
