@@ -1,4 +1,4 @@
-name: 🚀 Dev to Main Auto-Merge
+name: 🚀 Dev to Main Direct Merge
 
 on:
   workflow_run:
@@ -11,8 +11,8 @@ permissions:
   actions: read
 
 jobs:
-  auto-merge-dev-to-main:
-    name: 🚀 Auto Merge Dev to Main
+  direct-merge-dev-to-main:
+    name: 🚀 Direct Merge Dev to Main
     runs-on: ubuntu-latest
     if: |
       github.event.workflow_run.conclusion == 'success' &&
@@ -110,7 +110,7 @@ jobs:
   merge-summary:
     name: 📊 Dev to Main Merge Summary
     runs-on: ubuntu-latest
-    needs: [auto-merge-dev-to-main]
+    needs: [direct-merge-dev-to-main]
     if: always()
     steps:
       - name: Generate summary
@@ -118,13 +118,13 @@ jobs:
           echo "## 🚀 Dev to Main 직접 머지 요약" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          if [[ "${{ needs.auto-merge-dev-to-main.result }}" == "success" ]]; then
+          if [[ "${{ needs.direct-merge-dev-to-main.result }}" == "success" ]]; then
             echo "✅ **직접 머지 성공**" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "dev 브랜치의 모든 체크가 통과하여 main 브랜치로 직접 머지되었습니다." >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "🚀 **장점**: PR 단계 없이 빠른 배포" >> $GITHUB_STEP_SUMMARY
-          elif [[ "${{ needs.auto-merge-dev-to-main.result }}" == "skipped" ]]; then
+          elif [[ "${{ needs.direct-merge-dev-to-main.result }}" == "skipped" ]]; then
             echo "⏭️ **머지 건너뜀**" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "워크플로우가 실패했거나 조건을 만족하지 않아 머지가 건너뛰어졌습니다." >> $GITHUB_STEP_SUMMARY
