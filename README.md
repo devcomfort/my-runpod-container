@@ -54,9 +54,9 @@ personal-runpod-image/
 | [🧪 **Shell 테스트**](docs/shell-testing.md) | Shell 테스트 시스템 |
 | [📋 **요구사항**](docs/guides/dev-requirements.md) | 개발 환경 요구사항 |
 
-## 🤖 **자동 빌드 & 머지 시스템**
+## 🤖 **자동 빌드 & 직접 머지 시스템**
 
-> **✨ 새로운 dev 브랜치 중심 CI/CD**: dev에서 개발 → 자동 테스트/빌드 → main 자동 머지!
+> **✨ No PR 초단순 CI/CD**: dev에서 개발 → 자동 테스트/빌드 → main 직접 머지!
 
 ### 🔄 **완전 자동화 워크플로우**
 
@@ -69,28 +69,26 @@ graph TD
     C --> E{모든 체크<br/>성공?}
     D --> E
     
-    E -->|✅ 성공| F["🤖 main PR<br/>자동 생성"]
+    E -->|✅ 성공| F["🚀 main 직접 머지<br/>git merge --no-ff"]
     E -->|❌ 실패| G["🚫 머지 중단<br/>로그 확인"]
     
-    F --> H["✅ 자동 승인"]
-    H --> I["🔄 Squash 머지"]
-    I --> J["📚 main 아카이브<br/>업데이트 완료"]
+    F --> H["📚 main 아카이브<br/>업데이트 완료"]
     
-    G --> K["🔧 문제 수정"]
-    K --> L["📝 다시 push"]
-    L --> A
+    G --> I["🔧 문제 수정"]
+    I --> J["📝 다시 push"]
+    J --> A
     
     style A fill:#e1f5fe
     style F fill:#e8f5e8
-    style J fill:#f3e5f5
+    style H fill:#f3e5f5
     style G fill:#ffebee
 ```
 
-### 📋 **자동화 조건**
+### 📋 **초단순 자동화 조건**
 - ✅ **dev 브랜치 push** → 즉시 빌드 및 테스트 시작  
 - ✅ **🧪 Shell 테스트 통과** (73개 테스트 케이스)
 - ✅ **🐳 Docker 빌드 성공** (모든 아키텍처)
-- ✅ **자동 main 머지** → 📚 안정된 아카이브 유지
+- ✅ **직접 main 머지** → 📚 안정된 아카이브 유지 (No PR!)
 
 ```bash
 # 🚀 이제 이것만 하면 모든 게 자동화됩니다!
@@ -98,7 +96,7 @@ git checkout dev
 git add .
 git commit -m "feat: 새로운 기능"
 git push origin dev
-# → 자동 테스트 → 자동 빌드 → 자동 main 머지 🎉
+# → 자동 테스트 → 자동 빌드 → 직접 main 머지 🎉 (No PR!)
 ```
 
 ## 🚀 개발 워크플로우
