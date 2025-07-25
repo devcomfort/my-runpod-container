@@ -10,3 +10,10 @@ dependencies = []
 dev = [
     "lefthook>=1.12.2",
 ]
+
+# Shell testing is available via direct script execution:
+# ./run_shell_tests.sh [options]
+#
+# Available options:
+# --unit-only, --mocked-only, --integration, --verbose
+# Or use uv run --script run_shell_tests.sh [options]
