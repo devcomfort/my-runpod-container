@@ -46,35 +46,35 @@ RUN set -eux; \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
         # Build tools
-        software-properties-common \
-        build-essential \
-        make \
-        cmake \
-        gfortran \
+    software-properties-common \
+    build-essential \
+    make \
+    cmake \
+    gfortran \
         # Development libraries
-        libblas-dev \
-        liblapack-dev \
+    libblas-dev \
+    liblapack-dev \
         libatlas-base-dev \
         libffi-dev \
         libhdf5-serial-dev \
         libssl-dev \
         # Media processing
-        ffmpeg \
-        libavcodec-dev \
-        libavfilter-dev \
-        libavformat-dev \
-        libavutil-dev \
-        libjpeg-dev \
-        libpng-dev \
-        libpostproc-dev \
-        libswresample-dev \
-        libswscale-dev \
-        libtiff-dev \
-        libv4l-dev \
-        libx264-dev \
-        libxext6 \
-        libxrender-dev \
-        libxvidcore-dev \
+    ffmpeg \
+    libavcodec-dev \
+    libavfilter-dev \
+    libavformat-dev \
+    libavutil-dev \
+    libjpeg-dev \
+    libpng-dev \
+    libpostproc-dev \
+    libswresample-dev \
+    libswscale-dev \
+    libtiff-dev \
+    libv4l-dev \
+    libx264-dev \
+    libxext6 \
+    libxrender-dev \
+    libxvidcore-dev \
         # System utilities
         git \
         curl \
@@ -89,12 +89,12 @@ RUN set -eux; \
         nginx \
         openssh-server \
         # File systems
-        cifs-utils \
-        nfs-common \
-        zstd \
+    cifs-utils \
+    nfs-common \
+    zstd \
         # GUI support
         libsm6 \
-        expect \
+    expect \
         gnome-keyring \
         ca-certificates \
         tzdata && \
