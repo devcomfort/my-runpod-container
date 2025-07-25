@@ -32,7 +32,11 @@ help:
 	@echo "  just push-seq           : 모든 타겟을 순차적으로 푸시합니다"
 	@echo "  just all-seq            : 모든 타겟에 대해 빌드와 푸시를 순차적으로 수행합니다"
 	@echo "  just clean              : 모든 도커 리소스를 정리합니다"
-	@echo "  just test-shell         : Shell 테스트를 실행합니다"
+	@echo "  just test-shell         : BATS Shell 테스트를 실행합니다"
+	@echo "  just test-shell-parallel: BATS 병렬 테스트 실행"
+	@echo "  just test-shell-tap     : BATS TAP 형식 테스트"
+	@echo "  just test-list          : BATS 테스트 파일 목록"
+	@echo "  just test-integration   : BATS 통합 테스트 포함"
 	@echo "  just check-env          : 개발 환경을 체크합니다"
 	@echo ""
 	@echo "🎯 빠른 개발 명령어:"
@@ -100,9 +104,9 @@ all-seq: build-seq push-seq
 
 # === 개발 및 테스트 명령어 ===
 
-# Shell 테스트 실행
+# BATS Shell 테스트 실행
 test-shell *args="":
-	@echo "�� Shell 테스트 실행..."
+	@echo "🧪 BATS Shell 테스트 실행..."
 	./run_shell_tests.sh {{args}}
 
 # 개발 환경 체크
@@ -133,13 +137,13 @@ dev-setup:
 build-test target="cpu":
 	@echo "🔄 빌드 + 테스트 파이프라인 시작..."
 	just build-target {{target}}
-	just test-shell --unit-only
+	just test-shell
 	@echo "✅ 빌드 + 테스트 완료!"
 
 # CI 파이프라인과 동일한 검사
 ci:
 	@echo "🤖 CI 파이프라인 시뮬레이션..."
-	just test-shell --verbose
+	just test-shell -v
 	just check-env
 	just check-versions
 	@echo "✅ CI 검사 완료!"
@@ -173,10 +177,12 @@ cpu: (build-target "cpu")
 cuda: (build-target "12-6-2")
 
 # 빠른 테스트 (unit only)
-test: (test-shell "--unit-only")
+# 빠른 테스트 (BATS unit only)
+test: test-shell
 
 # 모든 테스트
-test-all: (test-shell "--verbose")
+test-all: (test-shell "-v")
+# 모든 테스트 (BATS verbose)
 
 # 프로젝트 상태 확인
 status:
@@ -197,3 +203,24 @@ info:
 	@git --no-pager status --porcelain || echo "Git 없음"
 	@echo ""
 	just status
+
+# BATS 테스트 (병렬)
+test-shell-parallel jobs="4":
+	@echo "⚡ BATS 병렬 테스트 실행 ({{jobs}} jobs)..."
+	./run_shell_tests.sh -p -j {{jobs}}
+
+# BATS 테스트 (TAP 형식)
+test-shell-tap:
+	@echo "📋 BATS TAP 형식 테스트..."
+	./run_shell_tests.sh -f tap
+
+# BATS 테스트 파일 목록
+test-list:
+	@echo "📋 사용 가능한 BATS 테스트 파일:"
+	./run_shell_tests.sh --list
+
+# BATS 통합 테스트 포함
+test-integration:
+	@echo "🐳 BATS 통합 테스트 실행..."
+	./run_shell_tests.sh -i -v
+
