@@ -1,0 +1,169 @@
+name: Build and Push Multi-Architecture Images
+
+on:
+  push:
+    branches: [ main, develop ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: 'Release version (e.g., 0.3)'
+        required: true
+        default: '0.3'
+
+env:
+  DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME || 'devcomfort' }}
+  GHCR_USERNAME: ${{ github.actor }}
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      release: ${{ steps.version.outputs.release }}
+      targets: ${{ steps.targets.outputs.matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Determine release version
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "release=${{ github.event.inputs.release_version }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "release=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          else
+            echo "release=0.2" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Setup build targets matrix
+        id: targets
+        run: |
+          # 빌드 타겟을 우선순위별로 매트릭스 구성 (최적화된 빌드 순서)
+          TARGETS='[
+            {"name": "cpu", "platforms": "linux/amd64,linux/arm64", "priority": 1, "cache_key": "cpu"},
+            {"name": "11-8-0", "platforms": "linux/amd64", "priority": 2, "cache_key": "cuda11"},
+            {"name": "12-1-0", "platforms": "linux/amd64", "priority": 2, "cache_key": "cuda12"},
+            {"name": "12-4-1", "platforms": "linux/amd64", "priority": 3, "cache_key": "cuda12"},
+            {"name": "12-5-1", "platforms": "linux/amd64", "priority": 3, "cache_key": "cuda12"},
+            {"name": "12-6-2", "platforms": "linux/amd64", "priority": 3, "cache_key": "cuda12"}
+          ]'
+          echo "matrix=$TARGETS" >> $GITHUB_OUTPUT
+
+  build:
+    needs: setup
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 2  # 리소스 절약을 위한 병렬 제한
+      matrix:
+        target: ${{ fromJson(needs.setup.outputs.targets) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Free up disk space
+        run: |
+          # CI 환경에서 디스크 공간 확보
+          sudo rm -rf /usr/local/lib/android /opt/ghc /usr/local/.ghcup
+          sudo docker system prune -af
+          df -h
+        
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          platforms: linux/amd64,linux/arm64
+          driver-opts: |
+            network=host
+            image=moby/buildkit:buildx-stable-1
+          
+      - name: Login to Docker Hub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+          
+      - name: Login to GitHub Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ env.GHCR_USERNAME }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Build and push
+        uses: docker/bake-action@v4
+        with:
+          files: ./docker-bake.hcl
+          targets: ${{ matrix.target.name }}
+          push: ${{ github.event_name != 'pull_request' }}
+        env:
+          RELEASE: ${{ needs.setup.outputs.release }}
+          DOCKER_HUB_USERNAME: ${{ env.DOCKER_HUB_USERNAME }}
+          GHCR_USERNAME: ${{ env.GHCR_USERNAME }}
+          BUILDKIT_PROGRESS: plain
+          DOCKER_BUILDKIT: 1
+          
+      - name: Build summary
+        if: always()
+        run: |
+          echo "### 🚀 Build Summary for ${{ matrix.target.name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Target**: ${{ matrix.target.name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Platforms**: ${{ matrix.target.platforms }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Cache Key**: ${{ matrix.target.cache_key }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          if [[ "${{ github.event_name }}" != "pull_request" ]]; then
+            echo "- **Published**: ✅ Images pushed to registries" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **Published**: ⏭️ PR build (no push)" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # 크로스 플랫폼 호환성 테스트
+  test-compatibility:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Test multi-architecture setup script
+        run: |
+          chmod +x setup_multi_architecture_build.sh
+          # 스크립트 문법 검증
+          bash -n setup_multi_architecture_build.sh
+          echo "✅ Setup script syntax is valid"
+          
+      - name: Validate docker-bake.hcl
+        run: |
+          # Docker Buildx Bake 설정 검증
+          docker buildx bake --file docker-bake.hcl --print
+          echo "✅ docker-bake.hcl configuration is valid"
+          
+      - name: Test Makefile
+        run: |
+          # Makefile 문법 검증
+          make help
+          echo "✅ Makefile is functional"
+          
+  # 빌드 성공 알림
+  build-complete:
+    needs: [build, test-compatibility]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build completion summary
+        run: |
+          echo "## 🎯 Build Status Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Component | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Multi-arch Build | ${{ needs.build.result == 'success' && '✅ Success' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Compatibility Tests | ${{ needs.test-compatibility.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [[ "${{ needs.build.result }}" == "success" ]]; then
+            echo "🚀 **All images built successfully and available in:**" >> $GITHUB_STEP_SUMMARY
+            echo "- Docker Hub: \`docker.io/${{ env.DOCKER_HUB_USERNAME }}/personal-runpod-environment\`" >> $GITHUB_STEP_SUMMARY
+            echo "- GitHub Container Registry: \`ghcr.io/${{ env.GHCR_USERNAME }}/personal-runpod-environment\`" >> $GITHUB_STEP_SUMMARY
+          fi 
