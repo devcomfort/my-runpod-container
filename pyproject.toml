@@ -11,9 +11,31 @@ dev = [
     "lefthook>=1.12.2",
 ]
 
+# 🚀 Just 명령 실행기 통합
+# 
+# Just는 이미 설치되어 있으므로 다음과 같이 사용할 수 있습니다:
+#
+# === 직접 실행 (권장) ===
+# just                    # 모든 명령어 목록 표시
+# just cpu               # CPU 버전 빌드
+# just test              # 빠른 테스트
+# just dev-setup         # 개발 환경 설정
+# just status            # 프로젝트 상태 확인
+#
+# === uv 통합 실행 ===
+# uv run --script just --list     # 명령어 목록
+# uv run --script just cpu        # CPU 빌드
+# uv run --script just test       # 테스트
+#
+# === 주요 명령어 카테고리 ===
+# 🔧 개발: dev-setup, check-env, check-versions, update-versions
+# 🐳 빌드: build, cpu, cuda, build-target, build-seq
+# 🧪 테스트: test, test-all, test-shell, ci
+# 📊 정보: status, info
+# 🧹 정리: clean, clean-all, clean-cache
+#
 # Shell testing is available via direct script execution:
 # ./run_shell_tests.sh [options]
 #
 # Available options:
 # --unit-only, --mocked-only, --integration, --verbose
-# Or use uv run --script run_shell_tests.sh [options]

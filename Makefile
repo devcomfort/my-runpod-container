@@ -1,3 +1,11 @@
+# ⚠️  DEPRECATED: Makefile이 justfile로 대체되었습니다
+# 새로운 Just 명령 실행기를 사용하세요: https://github.com/casey/just
+# 
+# 설치: sudo apt install just
+# 사용: just (명령어 목록 표시)
+# 
+# 이 Makefile은 호환성을 위해 유지되지만, justfile 사용을 권장합니다.
+
 # 기본 설정
 RELEASE ?= 0.2
 DOCKER_HUB_USERNAME ?= devcomfort
