@@ -45,17 +45,24 @@ run_test() {
 echo "🔬 버전 통합 테스트 시작"
 echo "======================================"
 
-# .versions.env 파일 존재 확인 (상위 디렉토리에서)
-if [ ! -f "../.versions.env" ]; then
-    log_error "../.versions.env 파일을 찾을 수 없습니다!"
+# .versions.env 파일 경로 자동 감지
+VERSIONS_FILE=""
+if [ -f ".versions.env" ]; then
+    VERSIONS_FILE=".versions.env"
+elif [ -f "../.versions.env" ]; then
+    VERSIONS_FILE="../.versions.env"
+else
+    log_error ".versions.env 파일을 찾을 수 없습니다!"
+    echo "   현재 디렉토리: $(pwd)"
+    echo "   확인한 경로: .versions.env, ../.versions.env"
     exit 1
 fi
 
-log_info "✅ ../.versions.env 파일 발견"
+log_info "✅ .versions.env 파일 발견 (경로: $VERSIONS_FILE)"
 
-# 환경변수 로드 (상위 디렉토리에서)
+# 환경변수 로드
 set -a
-source ../.versions.env
+source "$VERSIONS_FILE"
 set +a
 
 log_info "환경변수 로드 완료"

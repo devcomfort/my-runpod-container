@@ -193,30 +193,56 @@ main() {
     log_info "📋 프로젝트 파일 검사"
     echo
     
-    # .versions.env 파일 체크 (상위 디렉토리에서)
-    if [ -f "../.versions.env" ]; then
-        log_info "✅ .versions.env 파일 존재"
+    # .versions.env 파일 체크 (경로 자동 감지)
+    VERSIONS_FILE=""
+    if [ -f ".versions.env" ]; then
+        VERSIONS_FILE=".versions.env"
+    elif [ -f "../.versions.env" ]; then
+        VERSIONS_FILE="../.versions.env"
+    fi
+    
+    if [ -n "$VERSIONS_FILE" ]; then
+        log_info "✅ .versions.env 파일 존재 (경로: $VERSIONS_FILE)"
         ((CHECKS_PASSED++))
     else
-        log_error "❌ ../.versions.env 파일 없음"
+        log_error "❌ .versions.env 파일 없음"
         ((CHECKS_FAILED++))
     fi
     
-        # docker-bake.hcl 파일 체크 (상위 디렉토리에서)
-    if [ -f "../docker-bake.hcl" ]; then
-        log_info "✅ docker-bake.hcl 파일 존재"
+    # docker-bake.hcl 파일 체크 (경로 자동 감지)
+    BAKE_FILE=""
+    if [ -f "docker-bake.hcl" ]; then
+        BAKE_FILE="docker-bake.hcl"
+    elif [ -f "../docker-bake.hcl" ]; then
+        BAKE_FILE="../docker-bake.hcl"
+    fi
+    
+    if [ -n "$BAKE_FILE" ]; then
+        log_info "✅ docker-bake.hcl 파일 존재 (경로: $BAKE_FILE)"
         ((CHECKS_PASSED++))
         
-        # 기본 구문 검사 (상위 디렉토리에서 실행)
-        if (cd .. && docker buildx bake --print cpu >/dev/null 2>&1); then
-            log_info "✅ docker-bake.hcl 구문 정상"
-            ((CHECKS_PASSED++))
+        # 기본 구문 검사 (현재 위치에서 파일 경로에 맞게 실행)
+        if [ "$BAKE_FILE" = "docker-bake.hcl" ]; then
+            # 현재 디렉토리에 있는 경우
+            if docker buildx bake --print cpu >/dev/null 2>&1; then
+                log_info "✅ docker-bake.hcl 구문 정상"
+                ((CHECKS_PASSED++))
+            else
+                log_error "❌ docker-bake.hcl 구문 오류"
+                ((CHECKS_FAILED++))
+            fi
         else
-            log_error "❌ docker-bake.hcl 구문 오류"
-            ((CHECKS_FAILED++))
+            # 상위 디렉토리에 있는 경우
+            if (cd .. && docker buildx bake --print cpu >/dev/null 2>&1); then
+                log_info "✅ docker-bake.hcl 구문 정상"
+                ((CHECKS_PASSED++))
+            else
+                log_error "❌ docker-bake.hcl 구문 오류"
+                ((CHECKS_FAILED++))
+            fi
         fi
     else
-        log_error "❌ ../docker-bake.hcl 파일 없음"
+        log_error "❌ docker-bake.hcl 파일 없음"
         ((CHECKS_FAILED++))
     fi
     
