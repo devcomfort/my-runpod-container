@@ -51,7 +51,7 @@ personal-runpod-image/
 | [🔧 **개발 가이드**](docs/guides/development.md) | 개발 환경 설정 |
 | [🤖 **PR 자동 머지**](docs/guides/pr-auto-merge.md) | 자동 머지 시스템 가이드 |
 | [⚙️ **도구 관리**](docs/guides/tool-management.md) | 버전 관리 및 도구 분류 |
-| [🧪 **Shell 테스트**](docs/shell-testing.md) | Shell 테스트 시스템 |
+| [🧪 **BATS 테스트**](docs/shell-testing.md) | BATS Shell 테스트 시스템 |
 | [📋 **요구사항**](docs/guides/dev-requirements.md) | 개발 환경 요구사항 |
 
 ## 🤖 **자동 빌드 & 직접 머지 시스템**
@@ -63,7 +63,7 @@ personal-runpod-image/
 ```mermaid
 graph TD
     A["🚀 dev 브랜치 push"] --> B["⚡ 자동 트리거"]
-    B --> C["🧪 Shell Tests<br/>Unit/Mocked/Integration<br/>(73개 테스트)"]
+    B --> C["🧪 BATS Tests<br/>66개 테스트 100% 성공<br/>병렬실행 지원"]
     B --> D["🐳 Docker Build<br/>멀티 아키텍처<br/>모든 CUDA 버전"]
     
     C --> E{모든 체크<br/>성공?}
@@ -115,10 +115,13 @@ just cpu                    # CPU 버전 빌드
 just cuda                   # CUDA 최신 버전 빌드
 just build-target 12-6-2    # 특정 CUDA 버전 빌드
 
-# 🧪 테스트
-just test                   # 빠른 테스트
-just test-all              # 전체 테스트
-just ci                    # CI 파이프라인 시뮬레이션
+# 🧪 테스트 (BATS)
+just test                   # BATS 빠른 테스트
+just test-all               # BATS 전체 테스트
+just test-shell-parallel    # BATS 병렬 테스트 (3-5배 빠름)
+just test-integration       # BATS 통합 테스트 포함
+just test-list              # 사용 가능한 테스트 파일 목록
+just ci                     # CI 파이프라인 시뮬레이션
 
 # 📊 상태 확인
 just status                # 프로젝트 상태
@@ -138,8 +141,11 @@ python3 dev-tools/update-container-versions.py
 docker buildx bake cpu      # CPU 버전 빌드
 docker buildx bake 12-6-2   # CUDA 12.6.2 버전 빌드
 
-# 🧪 테스트
-./run_shell_tests.sh --unit-only
+# 🧪 테스트 (BATS)
+./run_shell_tests.sh           # BATS 기본 테스트
+./run_shell_tests.sh -p        # BATS 병렬 테스트  
+./run_shell_tests.sh -i        # BATS 통합 테스트 포함
+./run_shell_tests.sh --list    # 테스트 파일 목록
 ```
 
 ## 📞 문의 및 지원
