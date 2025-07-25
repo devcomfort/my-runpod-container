@@ -1,0 +1,44 @@
+{
+  "name": "personal-runpod-image",
+  "version": "1.0.0",
+  "description": "Personal RunPod Docker image with multi-architecture build support",
+  "scripts": {
+    "dev-setup": "just dev-setup",
+    "build": "just build",
+    "build:cpu": "just cpu",
+    "build:cuda": "just cuda",
+    "test": "just test",
+    "test:all": "just test-all",
+    "test:shell": "cd tests/bats && ../../node_modules/.bin/bats *.bats",
+    "test:shell:parallel": "cd tests/bats && ../../node_modules/.bin/bats --jobs 4 *.bats",
+    "test:shell:tap": "cd tests/bats && ../../node_modules/.bin/bats --formatter tap *.bats",
+    "ci": "just ci",
+    "clean": "just clean",
+    "clean:all": "just clean-all",
+    "status": "just status",
+    "info": "just info",
+    "check-env": "just check-env",
+    "check-versions": "just check-versions",
+    "update-versions": "just update-versions",
+    "lefthook:install": "lefthook install",
+    "lefthook:run": "lefthook run",
+    "postinstall": "just --version > /dev/null 2>&1 || echo 'Warning: just not found. Please install just for full functionality.'"
+  },
+  "keywords": [
+    "docker",
+    "runpod",
+    "multi-architecture",
+    "development"
+  ],
+  "author": "",
+  "packageManager": "pnpm@10.6.5",
+  "devDependencies": {
+    "bats": "^1.12.0",
+    "lefthook": "^1.12.2",
+    "rust-just": "^1.42.4"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}
