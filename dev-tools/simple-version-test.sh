@@ -13,7 +13,6 @@ if [ -f "../.versions.env" ]; then
     echo "   GO_VERSION=$GO_VERSION"
     echo "   TINYGO_VERSION=$TINYGO_VERSION"  
     echo "   GH_VERSION=$GH_VERSION"
-    echo "   BUILDX_VERSION=$BUILDX_VERSION"
 else
     echo "❌ ../.versions.env 파일이 없습니다"
     exit 1
