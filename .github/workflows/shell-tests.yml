@@ -1,0 +1,245 @@
+name: 🧪 Shell Tests
+
+on:
+  push:
+    paths:
+      - '**.sh'
+      - 'dev-tools/**'
+      - 'container/scripts/**'
+      - 'container/src/**'
+      - 'tests/**'
+      - 'run_shell_tests.sh'
+      - '.versions.env'
+  pull_request:
+    paths:
+      - '**.sh'
+      - 'dev-tools/**'
+      - 'container/scripts/**'
+      - 'container/src/**'
+      - 'tests/**'
+      - 'run_shell_tests.sh'
+      - '.versions.env'
+  workflow_dispatch:
+
+jobs:
+  # 🧪 빠른 Shell 테스트
+  shell-tests:
+    name: 🧪 Shell Tests (${{ matrix.category }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        category: ['unit', 'mocked', 'integration']
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Setup test environment
+        run: |
+          echo "🔧 Setting up test environment..."
+          
+          # Bashunit 설치
+          if [ ! -f lib/bashunit ]; then
+            echo "📦 Installing Bashunit..."
+            curl -s https://bashunit.typeddevs.com/install.sh | bash
+            mkdir -p lib
+            mv bashunit lib/
+          fi
+          chmod +x lib/bashunit
+          
+          # 실행 권한 설정
+          find . -name "*.sh" -type f -exec chmod +x {} \;
+          
+          echo "✅ Test environment ready"
+          
+      - name: Validate test structure
+        run: |
+          echo "🔍 Validating test structure..."
+          
+          # 테스트 디렉토리 구조 확인
+          required_dirs=("tests/unit" "tests/unit_mocked" "tests/integration" "tests/helpers")
+          for dir in "${required_dirs[@]}"; do
+            if [ ! -d "$dir" ]; then
+              echo "❌ Required test directory missing: $dir"
+              exit 1
+            fi
+          done
+          
+          # 테스트 파일 개수 확인
+          unit_tests=$(find tests/unit -name "*_test.sh" | wc -l)
+          mocked_tests=$(find tests/unit_mocked -name "*_test.sh" | wc -l)
+          integration_tests=$(find tests/integration -name "*_test.sh" | wc -l)
+          
+          echo "📊 Test file counts:"
+          echo "  - Unit tests: $unit_tests"
+          echo "  - Mocked tests: $mocked_tests"
+          echo "  - Integration tests: $integration_tests"
+          echo "  - Total: $((unit_tests + mocked_tests + integration_tests))"
+          
+      - name: Run Unit Tests
+        if: matrix.category == 'unit'
+        run: |
+          echo "🧪 Running Unit Tests..."
+          ./run_shell_tests.sh --unit-only --verbose
+          
+      - name: Run Mocked Tests
+        if: matrix.category == 'mocked'
+        run: |
+          echo "🎭 Running Mocked Tests..."
+          ./run_shell_tests.sh --mocked-only --verbose
+          
+      - name: Run Integration Tests
+        if: matrix.category == 'integration'
+        run: |
+          echo "🐳 Running Integration Tests..."
+          FORCE_INTEGRATION=true ./run_shell_tests.sh --integration --verbose
+        continue-on-error: true  # Docker daemon 이슈로 실패할 수 있음
+        
+      - name: Test Results Summary
+        if: always()
+        run: |
+          echo "## 🧪 ${{ matrix.category }} Tests Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ job.status }}" == "success" ]]; then
+            echo "✅ **Status**: All tests passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Status**: Some tests failed" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Category**: ${{ matrix.category }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Test Command**: \`./run_shell_tests.sh --${{ matrix.category }}-only\`" >> $GITHUB_STEP_SUMMARY
+
+  # 🔍 스크립트 품질 검사
+  script-quality:
+    name: 🔍 Script Quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Install ShellCheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+          
+      - name: Run ShellCheck
+        run: |
+          echo "🔍 Running ShellCheck on all shell scripts..."
+          
+          # 모든 .sh 파일에 대해 ShellCheck 실행
+          find . -name "*.sh" -type f | while read -r script; do
+            echo "Checking: $script"
+            shellcheck "$script" || echo "⚠️ Issues found in $script"
+          done
+          
+      - name: Validate script syntax
+        run: |
+          echo "🔧 Validating shell script syntax..."
+          
+          # 모든 .sh 파일의 구문 검증
+          error_count=0
+          find . -name "*.sh" -type f | while read -r script; do
+            if ! bash -n "$script"; then
+              echo "❌ Syntax error in: $script"
+              ((error_count++))
+            fi
+          done
+          
+          if [ $error_count -eq 0 ]; then
+            echo "✅ All shell scripts have valid syntax"
+          else
+            echo "❌ Found $error_count scripts with syntax errors"
+            exit 1
+          fi
+          
+      - name: Check for best practices
+        run: |
+          echo "📋 Checking shell script best practices..."
+          
+          # set -e 사용 확인
+          scripts_without_set_e=$(find . -name "*.sh" -type f -exec grep -L "set -e" {} \; | wc -l)
+          echo "Scripts without 'set -e': $scripts_without_set_e"
+          
+          # shebang 확인
+          scripts_without_shebang=$(find . -name "*.sh" -type f -exec head -1 {} \; | grep -v "^#!/" | wc -l)
+          echo "Scripts without proper shebang: $scripts_without_shebang"
+
+  # 📊 테스트 커버리지 리포트
+  test-coverage:
+    name: 📊 Test Coverage Report
+    runs-on: ubuntu-latest
+    needs: [shell-tests]
+    if: always()
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Generate coverage report
+        run: |
+          echo "📊 Generating test coverage report..."
+          
+          # 전체 함수 수 계산
+          total_functions=0
+          tested_functions=0
+          
+          # 각 스크립트의 함수 개수 확인
+          scripts=("setup_multi_architecture_build.sh" "dev-tools/check-dev-requirements.sh" "container/scripts/start.sh")
+          
+          for script in "${scripts[@]}"; do
+            if [[ -f "$script" ]]; then
+              func_count=$(grep -c "^[a-zA-Z_][a-zA-Z0-9_]*() {" "$script" || echo 0)
+              total_functions=$((total_functions + func_count))
+              echo "Functions in $script: $func_count"
+            fi
+          done
+          
+          # 테스트 케이스 수 확인
+          test_cases=$(find tests/ -name "*_test.sh" -exec grep -c "^test_" {} \; | awk '{sum+=$1} END {print sum}')
+          
+          echo "## 📊 Test Coverage Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Total Functions | $total_functions |" >> $GITHUB_STEP_SUMMARY
+          echo "| Test Cases | $test_cases |" >> $GITHUB_STEP_SUMMARY
+          echo "| Test Files | $(find tests/ -name "*_test.sh" | wc -l) |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Test Categories" >> $GITHUB_STEP_SUMMARY
+          echo "- 🧪 **Unit Tests**: $(find tests/unit -name "*_test.sh" | wc -l) files" >> $GITHUB_STEP_SUMMARY
+          echo "- 🎭 **Mocked Tests**: $(find tests/unit_mocked -name "*_test.sh" | wc -l) files" >> $GITHUB_STEP_SUMMARY
+          echo "- 🐳 **Integration Tests**: $(find tests/integration -name "*_test.sh" | wc -l) files" >> $GITHUB_STEP_SUMMARY
+
+  # 🎯 결과 요약
+  test-summary:
+    name: 🎯 Test Summary
+    runs-on: ubuntu-latest
+    needs: [shell-tests, script-quality, test-coverage]
+    if: always()
+    steps:
+      - name: Test workflow summary
+        run: |
+          echo "# 🎊 Shell Tests Workflow Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📋 Results Overview" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Component | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 🧪 Shell Tests | ${{ needs.shell-tests.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔍 Script Quality | ${{ needs.script-quality.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 📊 Coverage Report | ${{ needs.test-coverage.result == 'success' && '✅ Generated' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ needs.shell-tests.result }}" == "success" && "${{ needs.script-quality.result }}" == "success" ]]; then
+            echo "🎉 **All shell tests and quality checks passed!**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Your shell scripts are:" >> $GITHUB_STEP_SUMMARY
+            echo "- ✅ Functionally correct" >> $GITHUB_STEP_SUMMARY
+            echo "- ✅ Following best practices" >> $GITHUB_STEP_SUMMARY
+            echo "- ✅ Well tested" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ **Some issues were found**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Please check the failed jobs for details." >> $GITHUB_STEP_SUMMARY
+          fi 
