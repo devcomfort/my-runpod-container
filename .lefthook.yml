@@ -1,0 +1,106 @@
+# Lefthook Git Hooks Configuration
+# 자동 의존성 설치 및 개발 환경 설정
+
+post-merge:
+  commands:
+    install-deps:
+      run: |
+        echo "🔄 Checking dependencies after git pull..."
+        # Check if package.json or pnpm-lock.yaml changed
+        if git diff HEAD@{1} HEAD --name-only | grep -E "(package\.json|pnpm-lock\.yaml)" > /dev/null; then
+          echo "📦 Dependencies changed, installing..."
+          # Check if pnpm is available
+          if ! command -v pnpm >/dev/null 2>&1; then
+            echo "⚠️ pnpm not found, installing globally..."
+            npm install -g pnpm
+          fi
+          echo "📥 Installing dependencies with pnpm..."
+          pnpm install
+          echo "✅ Dependencies installed successfully!"
+        else
+          echo "✅ No dependency changes detected."
+        fi
+
+post-checkout:
+  commands:
+    install-deps:
+      run: |
+        # Only run on branch checkout or clone, not file checkout
+        if [ "$3" = "1" ]; then
+          echo "🔄 Setting up dependencies after checkout..."
+          # Check if package.json exists (clone scenario)
+          if [ -f "package.json" ]; then
+            # Check if pnpm is available
+            if ! command -v pnpm >/dev/null 2>&1; then
+              echo "⚠️ pnpm not found, installing globally..."
+              npm install -g pnpm
+            fi
+            echo "📥 Installing dependencies with pnpm..."
+            pnpm install
+            echo "✅ Dependencies installed successfully!"
+            
+            # Install lefthook hooks if not already installed
+            if [ -f ".lefthook.yml" ] && ! [ -f ".git/hooks/post-merge" ]; then
+              echo "🪝 Installing lefthook hooks..."
+              pnpm run lefthook:install
+              echo "✅ Lefthook hooks installed!"
+            fi
+          fi
+        fi
+
+post-rewrite:
+  commands:
+    install-deps:
+      run: |
+        echo "🔄 Checking dependencies after rewrite..."
+        # Check if package.json or pnpm-lock.yaml changed
+        if git diff HEAD@{1} HEAD --name-only | grep -E "(package\.json|pnpm-lock\.yaml)" > /dev/null; then
+          echo "📦 Dependencies changed, installing..."
+          # Check if pnpm is available
+          if ! command -v pnpm >/dev/null 2>&1; then
+            echo "⚠️ pnpm not found, installing globally..."
+            npm install -g pnpm
+          fi
+          echo "📥 Installing dependencies with pnpm..."
+          pnpm install
+          echo "✅ Dependencies installed successfully!"
+        fi
+
+# Pre-commit hooks for quality assurance
+pre-commit:
+  commands:
+    tests:
+      glob: "*.{js,ts,sh,bats}"
+      run: |
+        echo "🧪 Running tests before commit..."
+        # Run BATS tests if any shell files changed
+        if git diff --cached --name-only | grep -E "\.(sh|bats)$" > /dev/null; then
+          echo "🔧 Shell files changed, running BATS tests..."
+          if [ -d "tests/bats" ]; then
+            cd tests/bats && ../../node_modules/.bin/bats --formatter tap *.bats
+          fi
+        fi
+      fail_text: "Tests failed. Please fix before committing."
+
+# Pre-push hooks
+pre-push:
+  commands:
+    full-tests:
+      run: |
+        echo "🚀 Running full test suite before push..."
+        if [ -d "tests/bats" ]; then
+          echo "🧪 Running BATS tests..."
+          cd tests/bats && ../../node_modules/.bin/bats --formatter tap *.bats
+        fi
+        if command -v just >/dev/null 2>&1; then
+          echo "⚡ Running just tests..."
+          just test
+        fi
+      fail_text: "Full test suite failed. Please fix before pushing."
+
+# Skip some hooks in CI environment
+skip_output:
+  - meta
+  - execution
+
+colors: true 
