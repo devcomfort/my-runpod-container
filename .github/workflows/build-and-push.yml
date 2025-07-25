@@ -2,10 +2,10 @@ name: 🐳 Build and Push Multi-Architecture Images
 
 on:
   push:
-    branches: [ main, develop, dev ]  # dev 브랜치 추가
+    branches: [ dev ]  # dev 브랜치 중심 CI/CD (main은 아카이빙 목적)
     tags: [ 'v*' ]
   pull_request:
-    branches: [ main ]
+    branches: [ main ]  # main으로의 PR (자동 머지용)
   workflow_dispatch:
     inputs:
       release_version:

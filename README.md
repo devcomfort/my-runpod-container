@@ -54,22 +54,23 @@ personal-runpod-image/
 | [🧪 **Shell 테스트**](docs/shell-testing.md) | Shell 테스트 시스템 |
 | [📋 **요구사항**](docs/guides/dev-requirements.md) | 개발 환경 요구사항 |
 
-## 🤖 **자동 머지 시스템**
+## 🤖 **자동 빌드 & 머지 시스템**
 
-> **✨ 새로운 기능**: PR이 모든 테스트와 빌드를 통과하면 **자동으로 main 브랜치에 머지**됩니다!
+> **✨ 새로운 dev 브랜치 중심 CI/CD**: dev에서 개발 → 자동 테스트/빌드 → main 자동 머지!
 
-### 🔄 **자동 머지 조건**
+### 🔄 **완전 자동화 워크플로우**
+- ✅ **dev 브랜치 push** → 즉시 빌드 및 테스트 시작  
 - ✅ **🧪 Shell 테스트 통과** (73개 테스트 케이스)
 - ✅ **🐳 Docker 빌드 성공** (모든 아키텍처)
-- ✅ **📋 PR 상태 정상** (Draft 아님, 충돌 없음)
+- ✅ **자동 main 머지** → 📚 안정된 아카이브 유지
 
 ```bash
-# PR 생성 후 모든 체크가 통과하면
-# 🤖 자동으로 승인 및 머지됩니다!
-git checkout -b feature/new-feature
-# ... 개발 작업 ...
-git push origin feature/new-feature
-# → GitHub에서 PR 생성 → 자동 테스트 → 자동 머지 🎉
+# 🚀 이제 이것만 하면 모든 게 자동화됩니다!
+git checkout dev
+git add .
+git commit -m "feat: 새로운 기능"
+git push origin dev
+# → 자동 테스트 → 자동 빌드 → 자동 main 머지 🎉
 ```
 
 ## 🚀 개발 워크플로우

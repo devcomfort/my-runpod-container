@@ -1,219 +1,241 @@
-# 🤖 PR 자동 머지 시스템 가이드
+# 🚀 Dev 브랜치 자동 빌드 & Main 머지 시스템
 
 ## 📋 개요
 
-이 프로젝트는 **빌드가 성공적으로 완료된 경우에만 main 브랜치로 자동 머지**되는 시스템을 도입했습니다. 모든 테스트와 빌드가 통과해야만 코드가 main 브랜치에 반영됩니다.
+이 프로젝트는 **dev 브랜치 중심의 CI/CD 파이프라인**을 도입했습니다. dev 브랜치에서 모든 개발이 진행되고, 빌드와 테스트가 성공하면 **자동으로 main 브랜치에 머지**됩니다.
 
-## 🔄 자동 머지 워크플로우
+> **🎯 핵심 철학**: `dev` = 활발한 개발, `main` = 안정된 아카이브
+
+## 🔄 새로운 자동화 워크플로우
+
+### **🚀 Dev 브랜치 워크플로우**
+
+```mermaid
+graph LR
+    A[dev 브랜치 push] --> B[🧪 Shell Tests]
+    A --> C[🐳 Docker Build]
+    B --> D{모든 체크 성공?}
+    C --> D
+    D -->|✅ 성공| E[🤖 main PR 자동 생성]
+    D -->|❌ 실패| F[🚫 머지 중단]
+    E --> G[✅ 자동 승인]
+    G --> H[🔄 main 머지]
+    H --> I[📚 main 아카이브 완료]
+```
 
 ### **트리거 조건**
-- PR이 생성, 업데이트, 또는 ready for review 상태가 될 때
-- 빌드 또는 테스트 워크플로우가 완료될 때
+- ✅ **dev 브랜치 push**: 즉시 빌드 및 테스트 시작
+- ✅ **모든 체크 성공**: 자동으로 main 브랜치 머지 프로세스 시작
 
 ### **필수 체크 항목**
-1. **🐳 Docker 빌드**: 모든 타겟의 빌드가 성공적으로 완료
-2. **🧪 Shell 테스트**: Unit, Mocked, Integration 테스트 모두 통과
-3. **📋 PR 상태**: Draft가 아니고 충돌이 없어야 함
+1. **🧪 Shell 테스트**: Unit, Mocked, Integration 테스트 (73개)
+2. **🐳 Docker 빌드**: 멀티 아키텍처 빌드 성공
 
-## 🎯 자동 머지 프로세스
+## 🎯 완전 자동화 프로세스
 
-### **1단계: PR 자격 요건 확인**
-```yaml
-✅ Draft PR이 아님
-✅ 충돌이 없음 (mergeable 상태)
-✅ main 브랜치 대상 PR
+### **1단계: dev 브랜치 개발** 
+```bash
+# 일상적인 개발 워크플로우
+git checkout dev
+git add .
+git commit -m "feat: 새로운 기능 추가"
+git push origin dev
+# 🚀 이제 모든 것이 자동으로 시작됩니다!
 ```
 
-### **2단계: 모든 체크 완료 대기**
+### **2단계: 자동 빌드 & 테스트**
 ```yaml
-⏳ 최대 30분 대기
-🔍 30초 간격으로 상태 확인
-✅ 모든 필수 워크플로우 성공 확인
+⚡ 즉시 실행 (병렬):
+  🧪 Shell Tests (Unit/Mocked/Integration)
+  🐳 Docker Build (모든 타겟, 멀티 아키텍처)
 ```
 
-### **3단계: 자동 승인 및 머지**
+### **3단계: 성공 시 자동 main 머지**
 ```yaml
-✅ PR 자동 승인
-🔄 Squash merge로 머지
-🗑️ 브랜치 자동 삭제
+✅ 모든 체크 통과 시:
+  🤖 main 브랜치에 PR 자동 생성
+  ✅ 자동 승인
+  🔄 Squash merge로 머지
+  📚 main 브랜치 아카이브 업데이트
 ```
 
 ## 📊 워크플로우 상세
 
-### **🔍 체크 요구사항**
+### **🔍 필수 체크 요구사항**
 
-| 워크플로우 | 설명 | 필수 여부 |
-|-----------|------|----------|
-| 🐳 **Build and Push** | Docker 멀티 아키텍처 빌드 | ✅ 필수 |
-| 🧪 **Shell Tests** | Shell 스크립트 테스트 (73개) | ✅ 필수 |
+| 워크플로우 | 실행 조건 | 필수 여부 | 실패 시 처리 |
+|-----------|-----------|----------|------------|
+| 🧪 **Shell Tests** | dev push | ✅ 필수 | 머지 중단 |
+| 🐳 **Build and Push** | dev push | ✅ 필수 | 머지 중단 |
 
-### **🤖 자동 처리 상황**
+### **🚀 자동 처리 프로세스**
 
-#### **✅ 자동 머지되는 경우**
+#### **✅ 성공적인 자동 머지 흐름**
 ```bash
-# 모든 조건을 만족할 때
-✅ Shell 테스트 통과 (unit/mocked/integration)
-✅ Docker 빌드 성공 (모든 타겟)
-✅ PR 상태 정상 (draft 아님, 충돌 없음)
-→ 🎉 자동으로 main에 머지됨
+# dev 브랜치에서 개발
+git push origin dev
+
+# 자동 실행
+✅ Shell 테스트 통과 (73개 케이스)
+✅ Docker 빌드 성공 (CPU/CUDA 모든 타겟)
+
+# 자동 main 머지
+🤖 "🚀 Auto-merge: [커밋 메시지]" PR 생성
+✅ 자동 승인 및 머지
+📚 main 브랜치 업데이트 완료
+
+# 결과
+🎉 코드가 안전하게 main에 아카이브됨!
 ```
 
-#### **❌ 자동 머지되지 않는 경우**
+#### **❌ 실패 시 처리**
 ```bash
-# 다음 중 하나라도 해당할 때
-❌ 테스트 실패 또는 빌드 실패
-❌ Draft PR 상태
-❌ 충돌(conflict) 존재
-❌ 30분 내 체크 완료되지 않음
-→ 💬 실패 사유를 PR에 코멘트로 안내
+# dev 브랜치에서 push
+git push origin dev
+
+# 일부 체크 실패
+❌ Shell 테스트 실패 또는
+❌ Docker 빌드 실패
+
+# 결과
+🚫 main 머지 하지 않음
+📝 GitHub Actions에서 실패 로그 확인 가능
+🔧 문제 수정 후 다시 push하면 재시도
 ```
 
 ## 🛠️ 개발자 워크플로우
 
-### **일반적인 PR 생성 과정**
+### **일상적인 개발 과정**
 
 ```bash
-# 1. 기능 브랜치 생성
-git checkout -b feature/new-feature
+# 1. dev 브랜치에서 개발
+git checkout dev
+git pull origin dev  # 최신 상태로 동기화
 
-# 2. 개발 및 테스트
-just dev-setup
-just test
-just cpu  # 로컬 빌드 테스트
+# 2. 기능 개발 및 로컬 테스트
+just dev-setup      # 개발 환경 설정
+just test           # 로컬 테스트 실행
+just cpu            # 로컬 빌드 테스트
 
-# 3. 커밋 및 푸시
+# 3. 커밋 및 푸시 (자동화 시작점)
 git add .
-git commit -m "feat: new feature"
-git push origin feature/new-feature
+git commit -m "feat: 새로운 기능 구현"
+git push origin dev  # 🚀 여기서 모든 자동화 시작!
 
-# 4. PR 생성 (GitHub 웹에서)
-# → 자동으로 빌드 및 테스트 시작
-
-# 5. 모든 체크 통과 시
-# → 🤖 자동으로 승인 및 머지됨!
+# 4. 결과 확인
+# GitHub Actions에서 진행 상황 모니터링
+# 성공 시: main 브랜치에 자동 머지됨 ✅
+# 실패 시: 로그 확인 후 수정 🔧
 ```
 
-### **문제 해결 시나리오**
+### **브랜치 전략**
 
-#### **테스트 실패 시**
+#### **🔄 단순화된 Git 플로우**
 ```bash
-# 실패한 테스트 로컬에서 재현
-just test-all
+# 주요 브랜치
+main    # 📚 안정된 아카이브 (읽기 전용)
+dev     # 🚀 활발한 개발 (주 작업 브랜치)
 
-# 문제 수정 후 다시 푸시
-git add .
-git commit -m "fix: resolve test failures"
-git push origin feature/new-feature
-# → 자동으로 재검사 시작
+# 개발 브랜치 (필요시)
+feature/new-feature  # dev에서 분기 → dev로 머지
+bugfix/critical-fix  # dev에서 분기 → dev로 머지
 ```
 
-#### **빌드 실패 시**
+#### **⚠️ 중요한 변경사항**
 ```bash
-# 로컬에서 빌드 테스트
-just build-test
+# ❌ 더 이상 이렇게 하지 않음
+git checkout -b feature/branch
+# PR을 main에 생성
 
-# Docker 설정 문제 확인
-just check-env
-just check-versions
-
-# 수정 후 다시 푸시
-git push origin feature/new-feature
+# ✅ 새로운 방식
+git checkout dev
+# 직접 dev에서 개발하거나
+git checkout -b feature/branch
+# dev로 머지 후 자동으로 main에 반영
 ```
 
-## ⚙️ 고급 설정
+## 📈 장점 및 개선사항
 
-### **Manual Override 옵션**
+### **✅ 새로운 시스템의 장점**
 
-급한 상황에서는 수동으로 머지할 수 있습니다:
+| 항목 | 기존 방식 | 새로운 방식 | 개선 효과 |
+|------|-----------|-------------|-----------|
+| **브랜치 관리** | main PR 관리 | dev 중심 개발 | 🎯 단순화 |
+| **머지 프로세스** | 수동 PR 승인 | 완전 자동화 | ⚡ 빠른 배포 |
+| **안정성** | 수동 확인 의존 | 엄격한 자동 검증 | 🛡️ 높은 신뢰성 |
+| **아카이빙** | 관리 부담 | 자동 main 업데이트 | 📚 일관된 기록 |
 
+### **🔧 개발자 경험 개선**
+- **단순한 워크플로우**: dev 브랜치에서만 작업
+- **즉시 피드백**: push 후 바로 테스트 결과 확인
+- **자동 배포**: 성공 시 추가 작업 없이 main 반영
+- **안전한 개발**: 실패 시 main에 영향 없음
+
+## ⚙️ 고급 설정 및 커스터마이징
+
+### **워크플로우 모니터링**
+
+```bash
+# GitHub Actions 상태 확인
+https://github.com/your-repo/actions
+
+# 실시간 로그 확인
+gh run list --branch dev
+gh run view <run-id> --log
+```
+
+### **긴급 상황 대응**
+
+#### **수동 main 머지** (비상시)
 ```bash
 # GitHub CLI 사용
-gh pr merge <PR번호> --squash
+gh pr create --base main --head dev --title "Emergency merge"
+gh pr merge --squash
 
-# 또는 GitHub 웹에서
-# 1. PR 페이지에서 "Merge pull request" 클릭
-# 2. "Squash and merge" 선택
+# 또는 GitHub 웹에서 수동 처리
 ```
 
-### **자동 머지 일시 중지**
+#### **자동 머지 일시 중지**
+- 현재는 dev 브랜치 push를 중단하는 것이 유일한 방법
+- 향후 `[skip-ci]` 태그 지원 예정
 
-특정 PR에서 자동 머지를 방지하려면:
+### **디버깅 및 문제 해결**
 
-1. **Draft로 변경**: PR을 Draft 상태로 변경
-2. **[skip-automerge] 태그**: 커밋 메시지에 포함 (향후 구현 예정)
+#### **일반적인 실패 시나리오**
 
-## 🔧 워크플로우 커스터마이징
-
-### **타임아웃 조정**
-
-```yaml
-# .github/workflows/pr-auto-merge.yml에서
-MAX_WAIT=1800  # 30분 (기본값)
-WAIT_INTERVAL=30  # 30초 간격
-```
-
-### **필수 체크 추가**
-
-```yaml
-# 새로운 워크플로우 추가 시
-REQUIRED_CHECKS=("워크플로우1" "워크플로우2" "새워크플로우")
-```
-
-## 📈 모니터링 및 분석
-
-### **GitHub Actions 요약에서 확인**
-
-각 PR에서 자동 머지 상태를 실시간으로 확인할 수 있습니다:
-
-- **✅ 자동 머지 성공**: 모든 체크 통과하여 머지 완료
-- **❌ 자동 머지 실패**: 실패 사유와 해결 방법 제공
-- **⏳ 체크 진행 중**: 현재 진행 중인 체크 상태 표시
-
-### **알림 설정**
-
-GitHub 알림에서 다음을 확인할 수 있습니다:
-
-- PR 자동 승인 알림
-- 머지 완료 알림  
-- 실패 시 코멘트 알림
-
-## 🚨 트러블슈팅
-
-### **자주 발생하는 문제**
-
-#### **체크가 무한 대기 상태**
 ```bash
-# 원인: 워크플로우 이름 불일치
-# 해결: REQUIRED_CHECKS 배열의 이름 확인
+# 1. Shell 테스트 실패
+just test-all              # 로컬에서 재현
+just test-unit             # 단위 테스트만
+just test-integration      # 통합 테스트만
 
-# 확인 방법
-gh api repos/:owner/:repo/actions/workflows
+# 2. Docker 빌드 실패
+just check-env             # 환경 설정 확인
+just cpu                   # 로컬 빌드 테스트
+./dev-tools/simple-version-test.sh  # 버전 일관성 확인
+
+# 3. 워크플로우 자체 오류
+# GitHub Actions 로그에서 상세 정보 확인
 ```
 
-#### **권한 부족 오류**
-```bash
-# 필요한 권한:
-# - contents: write
-# - pull-requests: write
-# - checks: read
-# - actions: read
-```
+## 🎯 향후 개선 계획
 
-#### **머지 후에도 브랜치가 남아있음**
-```bash
-# 원인: 브랜치 보호 규칙
-# 해결: GitHub 설정에서 "Automatically delete head branches" 활성화
-```
+### **단기 계획** (1-2개월)
+- [ ] `[skip-ci]` 커밋 메시지 태그 지원
+- [ ] 실패 시 Slack/Discord 알림
+- [ ] 더 상세한 빌드 리포트
 
-## 📚 관련 문서
+### **장기 계획** (3-6개월)
+- [ ] 스테이징 환경 자동 배포
+- [ ] 성능 벤치마크 자동 실행
+- [ ] 릴리즈 노트 자동 생성
 
-- [GitHub Actions 워크플로우](../workflows/)
-- [Shell 테스트 시스템](../shell-testing.md)
-- [Just 명령 실행기](just-usage.md)
-- [개발 가이드](development.md)
+---
 
-## 🔗 유용한 링크
+## 🚀 결론
 
-- [GitHub Actions 문서](https://docs.github.com/en/actions)
-- [Branch Protection Rules](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches)
-- [Auto-merge 설정](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/automatically-merging-a-pull-request) 
+새로운 **dev 브랜치 중심 CI/CD 시스템**으로 개발 프로세스가 크게 단순화되었습니다:
+
+1. **dev에서 개발** → 2. **자동 테스트/빌드** → 3. **자동 main 머지**
+
+이제 개발자는 `dev` 브랜치에서만 작업하고, 나머지는 모두 자동화되어 **더 빠르고 안전한 개발**이 가능합니다! 🎉 

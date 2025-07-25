@@ -250,16 +250,35 @@ graph TD
 
 ## CI/CD 파이프라인
 
-### GitHub Actions 자동 빌드
+### 🚀 Dev 브랜치 중심 자동화
 
-이 프로젝트는 GitHub Actions을 통한 자동화된 CI/CD 파이프라인을 지원합니다:
+이 프로젝트는 **dev 브랜치 중심의 완전 자동화 CI/CD 파이프라인**을 운영합니다:
 
-- **자동 트리거**: `main` 브랜치 푸시, 태그 생성, Pull Request
-- **멀티 플랫폼 빌드**: Linux (AMD64, ARM64), Windows, macOS에서 테스트
-- **병렬 빌드**: 여러 CUDA 버전을 동시에 빌드하여 시간 단축
-- **레지스트리 지원**: Docker Hub와 GitHub Container Registry에 동시 푸시
+#### **🔄 워크플로우**
+```mermaid
+graph LR
+    A[dev push] --> B[🧪 Tests]
+    A --> C[🐳 Build]
+    B --> D{성공?}
+    C --> D
+    D -->|✅| E[main 자동 머지]
+    D -->|❌| F[머지 중단]
+```
 
-#### 필요한 Secrets 설정
+#### **자동 트리거 조건**
+- **dev 브랜치 push**: 모든 테스트와 빌드 자동 실행
+- **성공 시**: main 브랜치에 자동 PR 생성 및 머지
+- **실패 시**: 머지 중단, 로그에서 원인 확인 가능
+
+#### **브랜치 전략**
+- **`dev`**: 🚀 활발한 개발 (메인 작업 브랜치)
+- **`main`**: 📚 안정된 아카이브 (자동 머지 전용)
+
+#### **병렬 실행 체크**
+- **🧪 Shell 테스트**: Unit, Mocked, Integration (73개 케이스)
+- **🐳 Docker 빌드**: 멀티 아키텍처, 모든 CUDA 버전
+
+#### **필요한 Secrets 설정**
 
 Repository Settings > Secrets에서 다음 값들을 설정하세요:
 
@@ -269,7 +288,7 @@ DOCKER_HUB_TOKEN=your-dockerhub-access-token
 GITHUB_TOKEN=자동으로 제공됨
 ```
 
-#### 수동 빌드 실행
+#### **수동 빌드 실행**
 
 GitHub Actions 탭에서 "Build and Push Multi-Architecture Images" 워크플로우를 수동으로 실행할 수 있습니다.
 
@@ -281,7 +300,8 @@ GitHub Actions 탭에서 "Build and Push Multi-Architecture Images" 워크플로
 | **리소스 사용** | 로컬 리소스 의존 | GitHub 호스팅 러너 |
 | **캐시 활용** | 로컬 Docker 캐시 | GitHub Actions 캐시 |
 | **플랫폼 지원** | 단일 플랫폼 | 멀티 플랫폼 테스트 |
-| **배포** | 수동 푸시 필요 | 자동 배포 |
+| **배포** | 수동 푸시 필요 | 완전 자동 배포 |
+| **안전성** | 수동 검증 | 자동 검증 후 머지 |
 
 ## 크로스 플랫폼 호환성
 
