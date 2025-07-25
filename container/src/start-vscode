@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# determine which mode to run in
+if [[ $VSCODE_SERVE_MODE = "remote" ]]; then
+    # Use Python version for better error handling and logging
+    if command -v python3 >/dev/null 2>&1; then
+        echo "Starting VS Code Server (Python version)..."
+        python3 /usr/local/bin/serve-remote.py
+    else
+        echo "Python3 not found, falling back to expect version..."
+        serve-remote
+    fi
+else
+    echo "Starting VS Code Server (local mode)..."
+    serve-local
+fi
