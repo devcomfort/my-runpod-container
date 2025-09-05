@@ -8,7 +8,7 @@ group "default" {
 }
 
 target "rocm-base" {
-  context = "official-templates/base"
+  context = "builds/base"
   dockerfile = "Dockerfile"
   platforms = ["linux/amd64"]
 }

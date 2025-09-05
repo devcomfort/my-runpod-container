@@ -7,7 +7,7 @@ group "default" {
 }
 
 target "common-base" {
-  context = "official-templates/base"
+  context = "builds/base"
   dockerfile = "Dockerfile"
   platforms = ["linux/amd64"]
 }
