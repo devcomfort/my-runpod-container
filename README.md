@@ -138,28 +138,104 @@ Version compatibility and build targets are centralized in `builds/shared/versio
 - CUDA version compatibility  
 - Build target combinations
 
+## 🔧 Environment Variables Setup
+
+### Runtime Environment Variables (Container)
+These variables control container behavior when running:
+
+| Variable | Purpose | Default | Where to Set |
+|----------|---------|---------|--------------|
+| `JUPYTER_PASSWORD` | Enable Jupyter Lab on port 8888 | Not set (disabled) | Docker run `-e` or RunPod template |
+| `ENABLE_FILEBROWSER` | Start filebrowser service | `1` (enabled) | Docker run `-e` or RunPod template |
+| `ENABLE_HTTP_SERVER` | Start Python http.server | `0` (disabled) | Docker run `-e` or RunPod template |
+| `PUBLIC_KEY` | SSH public key for access | Not set | Docker run `-e` or RunPod template |
+| `TZ` | Container timezone | `Asia/Seoul` | Build-time (Dockerfile) |
+
+**How to get values:**
+- `PUBLIC_KEY`: `cat ~/.ssh/id_rsa.pub` (your SSH public key)
+- `JUPYTER_PASSWORD`: Any secure password you choose
+- `ENABLE_*`: Set to `1` (enable) or `0` (disable)
+
+### Build Environment Variables
+These variables control the build process:
+
+| Variable | Purpose | Default | Where to Set |
+|----------|---------|---------|--------------|
+| `RELEASE_VERSION` | Image version tag | `0.7.0` | `builds/shared/versions.hcl` |
+| `BASE_IMAGE` | Base Ubuntu/CUDA image | Varies by target | Docker bake files |
+
+### GitHub Actions Secrets
+Required for automated builds and deployments:
+
+| Secret | Purpose | How to Get | Where to Set |
+|--------|---------|------------|--------------|
+| `DOCKERHUB_USERNAME` | Docker Hub login | Your Docker Hub username | GitHub → Settings → Secrets |
+| `DOCKERHUB_TOKEN` | Docker Hub authentication | [Create access token](https://hub.docker.com/settings/security) | GitHub → Secrets and variables → Actions |
+
+**Setting up GitHub Secrets:**
+1. Go to your repository on GitHub
+2. Navigate to **Settings** → **Secrets and variables** → **Actions**
+3. Click **New repository secret**
+4. Add each secret with the exact name above
+
+**Getting Docker Hub Token:**
+1. Log in to [Docker Hub](https://hub.docker.com)
+2. Go to **Account Settings** → **Security**
+3. Click **New Access Token**
+4. Name: `github-actions-my-runpod-container`
+5. Permissions: **Read, Write, Delete**
+6. Copy the generated token (save it securely!)
+
+### Local Development Environment Variables
+For local builds and development:
+
+```bash
+# Optional: Override default versions
+export RELEASE_VERSION="dev-$(git branch --show-current)"
+
+# Optional: Custom Docker registry
+export DOCKER_REGISTRY="your-registry.com"
+
+# Build with custom version
+./bake.sh base --set "*.tags=my-runpod:${RELEASE_VERSION}"
+```
+
 ## 🚀 Getting Started
 
-1. **Choose your image** based on hardware (CPU/NVIDIA/AMD)
-2. **Build locally** or pull from registry
-3. **Configure services** via environment variables
-4. **Access via SSH** or web interfaces (Jupyter, VS Code, etc.)
+1. **Set up environment variables** (see above section)
+2. **Choose your image** based on hardware (CPU/NVIDIA/AMD)
+3. **Build locally** or pull from registry
+4. **Configure services** via runtime environment variables
+5. **Access via SSH** or web interfaces (Jupyter, VS Code, etc.)
 
 ### Example Usage
 
 ```bash
-# Build and run CPU image
+# 1. Build and run CPU image
 ./bake.sh base cpu-ubuntu2204 --load
-docker run -it --rm \
-  -p 8888:8888 -p 8081:8081 -p 4041:4041 \
-  -e JUPYTER_PASSWORD=mypassword \
-  -e PUBLIC_KEY="$(cat ~/.ssh/id_rsa.pub)" \
-  my-runpod:ubuntu2204
 
-# Access services
-# - Jupyter: http://localhost:8888
-# - Filebrowser: http://localhost:4041  
-# - SSH: ssh root@localhost
+# 2. Run with all services enabled
+docker run -it --rm \
+  -p 22:22 -p 8888:8888 -p 8081:8081 -p 4041:4041 -p 8089:8089 \
+  -e JUPYTER_PASSWORD="secure-password-123" \
+  -e PUBLIC_KEY="$(cat ~/.ssh/id_rsa.pub)" \
+  -e ENABLE_FILEBROWSER=1 \
+  -e ENABLE_HTTP_SERVER=1 \
+  runpod/base:0.7.0-ubuntu2204
+
+# 3. Access services
+# - SSH: ssh root@localhost -p 22
+# - Jupyter: http://localhost:8888 (password: secure-password-123)
+# - Filebrowser: http://localhost:4041
+# - HTTP Server: http://localhost:8089
+# - Code Server: http://localhost:8081 (if installed)
+
+# 4. RunPod Template Environment Variables
+# Set these in your RunPod template:
+# JUPYTER_PASSWORD=your-secure-password
+# PUBLIC_KEY=ssh-rsa AAAAB3NzaC1yc2E... (your public key)
+# ENABLE_FILEBROWSER=1
+# ENABLE_HTTP_SERVER=0
 ```
 
 ## 📝 License
