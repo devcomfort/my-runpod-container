@@ -39,14 +39,65 @@ RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen
 
 # NOTE: Install essential packages for development and ML workflows
 RUN apt-get install --yes --no-install-recommends \
-    ca-certificates curl dirmngr file git gpg gpg-agent inotify-tools \
-    jq lsof nano nginx openssh-server rsync software-properties-common \
-    sudo tmux unzip vim wget zip build-essential make cmake gfortran ffmpeg \
-    libatlas-base-dev libavcodec-dev libavfilter-dev libavformat-dev libblas-dev \
-    libffi-dev libhdf5-dev libgl1 libjpeg-dev liblapack-dev libpng-dev \
-    libpostproc-dev libsm6 libssl-dev libswscale-dev libtiff-dev \
-    libv4l-dev libx264-dev libxrender-dev libxvidcore-dev \
-    cifs-utils nfs-common zstd git-all
+    # Build tools and compilers
+    build-essential \
+    make \
+    cmake \
+    gfortran \
+    software-properties-common \
+    # Core system utilities
+    ca-certificates \
+    curl \
+    wget \
+    unzip \
+    zip \
+    tree \
+    htop \
+    iftop \
+    nano \
+    vim \
+    git \
+    git-all \
+    # Network and security
+    dirmngr \
+    file \
+    gpg \
+    gpg-agent \
+    inotify-tools \
+    jq \
+    lsof \
+    nginx \
+    openssh-server \
+    rsync \
+    sudo \
+    tmux \
+    # Media processing
+    ffmpeg \
+    libavcodec-dev \
+    libavfilter-dev \
+    libavformat-dev \
+    libpostproc-dev \
+    libswscale-dev \
+    libv4l-dev \
+    libx264-dev \
+    libxrender-dev \
+    libxvidcore-dev \
+    # Development libraries
+    libatlas-base-dev \
+    libblas-dev \
+    libffi-dev \
+    libhdf5-dev \
+    libgl1 \
+    libjpeg-dev \
+    liblapack-dev \
+    libpng-dev \
+    libsm6 \
+    libssl-dev \
+    libtiff-dev \
+    # File systems
+    cifs-utils \
+    nfs-common \
+    zstd
 
 # Add the Python PPA
 RUN add-apt-repository ppa:deadsnakes/ppa -y

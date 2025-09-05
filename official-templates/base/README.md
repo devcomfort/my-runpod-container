@@ -101,3 +101,31 @@ Perfect for immediate development and experimenting, or as the foundation for mo
 - `ENABLE_FILEBROWSER=1`: start filebrowser on 4040 (proxied at 4041)
 - `ENABLE_HTTP_SERVER=1`: start temporary http.server on 8088 (proxied at 8089)
 
+## Port Configuration
+
+### Core Services
+- **SSH**: Port 22 (always enabled)
+- **Jupyter Lab**: Port 8888 (enabled with `JUPYTER_PASSWORD`)
+- **Filebrowser**: Port 4040 → Proxied at 4041 (toggleable)
+- **HTTP Server**: Port 8088 → Proxied at 8089 (toggleable)
+
+### Development Ports (Reserved)
+- **Code Server**: Port 8081 → 8080 (VS Code in browser)
+- **VS Code Server**: Port 8001 → 8000 (VS Code remote)
+- **Generic Backend 1**: Port 5001 → 5000
+- **Generic Backend 2**: Port 6001 → 6000  
+- **Generic Backend 3**: Port 7001 → 7000
+- **Generic Backend 4**: Port 9001 → 9000
+
+### Specialized Ports (Available)
+- **Oobabooga**: Port 7861 → 7860
+- **InvokeAI**: Port 9091 → 9090
+- **Stable Diffusion/ComfyUI**: Port 3001 → 3000
+- **RunPod CLI API**: Port 7270 → 7271
+
+### Usage Notes
+- Left side (higher port) = External access through nginx proxy
+- Right side (lower port) = Internal service port
+- All services run behind nginx reverse proxy for security
+- Reserve ports allow multiple development services simultaneously
+
