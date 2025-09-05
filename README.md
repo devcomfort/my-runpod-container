@@ -129,7 +129,8 @@ This repository uses Docker Buildx and [bake files](https://docs.docker.com/buil
 │   ├── rocm/              # AMD GPU images  
 │   └── shared/            # Shared version definitions
 ├── bake.sh                # Build script
-└── README.md              # This file
+├── README.md              # Main documentation
+└── RUNPOD.md              # RunPod platform guide
 ```
 
 ### Version Management
@@ -157,9 +158,10 @@ These variables control container behavior when running:
 - `ENABLE_*`: Set to `1` (enable) or `0` (disable)
 
 **RunPod Platform Notes:**
-- **`PUBLIC_KEY`**: RunPod may automatically inject SSH keys from your account settings. If you've added SSH keys to your RunPod profile, they might be automatically available without setting this variable.
-- **`TZ`**: The timezone is set at build-time to `Asia/Seoul`. RunPod doesn't automatically override this, but you can set a different `TZ` environment variable in your template if needed.
-- **SSH Access**: RunPod provides direct SSH access through their platform. The `PUBLIC_KEY` variable is primarily for additional key management or local development.
+- **`PUBLIC_KEY`**: ✅ **자동 주입됨** - 계정 설정의 SSH 키들이 자동으로 주입
+- **`TZ`**: ❌ **주입되지 않음** - 컨테이너 기본값(Asia/Seoul) 사용, 템플릿에서 오버라이드 가능
+- **추가 환경변수**: `RUNPOD_POD_ID`, `RUNPOD_API_KEY`, `RUNPOD_TCP_PORT_22` 등 15개+ 변수 자동 주입
+- 상세 정보: [RUNPOD.md](./RUNPOD.md) 참조
 
 ### Build Environment Variables
 These variables control the build process:
@@ -207,33 +209,20 @@ export DOCKER_REGISTRY="your-registry.com"
 
 ### RunPod Platform Configuration
 
-#### SSH Key Setup (Optional)
-RunPod can automatically manage SSH access:
+For detailed RunPod platform setup, see [RUNPOD.md](./RUNPOD.md).
 
-1. **Via RunPod Account** (Recommended):
-   - Go to RunPod Dashboard → Account Settings → SSH Keys
-   - Add your public key: `cat ~/.ssh/id_rsa.pub`
-   - RunPod will automatically inject this key into containers
-
-2. **Via Environment Variable** (Manual):
-   - Set `PUBLIC_KEY` in your template environment variables
-   - Useful for additional keys or local development
-
-#### Template Environment Variables
-When creating a RunPod template, set these variables:
+**Quick Setup:**
 ```bash
+# RunPod Template Environment Variables
 JUPYTER_PASSWORD=your-secure-password
 ENABLE_FILEBROWSER=1
 ENABLE_HTTP_SERVER=0
 ```
 
-#### Port Mapping in RunPod
-RunPod automatically handles port mapping. The following ports will be accessible:
-- Port 22: SSH access
-- Port 8888: Jupyter Lab (if `JUPYTER_PASSWORD` is set)
-- Port 4041: Filebrowser (if enabled)
-- Port 8089: HTTP Server (if enabled)
-- Additional development ports as needed
+**Key Points:**
+- SSH keys can be managed via RunPod account settings (recommended)
+- RunPod automatically handles port mapping
+- Platform-specific environment variables are auto-injected
 
 ## 🚀 Getting Started
 
@@ -266,14 +255,26 @@ docker run -it --rm \
 # - Code Server: http://localhost:8081 (if installed)
 
 # 4. RunPod Template Environment Variables
-# Set these in your RunPod template:
+# See RUNPOD.md for detailed RunPod configuration
 # JUPYTER_PASSWORD=your-secure-password
 # ENABLE_FILEBROWSER=1
 # ENABLE_HTTP_SERVER=0
-# 
-# Note: PUBLIC_KEY may not be needed if you've added SSH keys 
-# to your RunPod account settings
 ```
+
+## 📚 References
+
+### Platform Guides
+- **[RUNPOD.md](./RUNPOD.md)** - Detailed RunPod platform configuration and troubleshooting
+
+### Development Tools
+- [Rye (Python 툴체인)](https://rye.astral.sh/) - Python 프로젝트 관리
+- [uv (pip 대체)](https://github.com/astral-sh/uv) - 빠른 Python 패키지 설치
+- [WebInstall](https://webinstall.dev/) - 개발 도구 간편 설치
+- [NVM](https://github.com/nvm-sh/nvm) - Node.js 버전 관리
+
+### Container & Docker
+- [Docker Buildx Bake](https://docs.docker.com/build/bake/) - 멀티 플랫폼 빌드
+- [S6-overlay](https://github.com/just-containers/s6-overlay) - 컨테이너 프로세스 관리
 
 ## 📝 License
 
