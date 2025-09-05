@@ -148,13 +148,18 @@ These variables control container behavior when running:
 | `JUPYTER_PASSWORD` | Enable Jupyter Lab on port 8888 | Not set (disabled) | Docker run `-e` or RunPod template |
 | `ENABLE_FILEBROWSER` | Start filebrowser service | `1` (enabled) | Docker run `-e` or RunPod template |
 | `ENABLE_HTTP_SERVER` | Start Python http.server | `0` (disabled) | Docker run `-e` or RunPod template |
-| `PUBLIC_KEY` | SSH public key for access | Not set | Docker run `-e` or RunPod template |
-| `TZ` | Container timezone | `Asia/Seoul` | Build-time (Dockerfile) |
+| `PUBLIC_KEY` | SSH public key for access | Not set | Docker run `-e` or RunPod template* |
+| `TZ` | Container timezone | `Asia/Seoul` | Build-time (Dockerfile)* |
 
 **How to get values:**
 - `PUBLIC_KEY`: `cat ~/.ssh/id_rsa.pub` (your SSH public key)
 - `JUPYTER_PASSWORD`: Any secure password you choose
 - `ENABLE_*`: Set to `1` (enable) or `0` (disable)
+
+**RunPod Platform Notes:**
+- **`PUBLIC_KEY`**: RunPod may automatically inject SSH keys from your account settings. If you've added SSH keys to your RunPod profile, they might be automatically available without setting this variable.
+- **`TZ`**: The timezone is set at build-time to `Asia/Seoul`. RunPod doesn't automatically override this, but you can set a different `TZ` environment variable in your template if needed.
+- **SSH Access**: RunPod provides direct SSH access through their platform. The `PUBLIC_KEY` variable is primarily for additional key management or local development.
 
 ### Build Environment Variables
 These variables control the build process:
@@ -200,6 +205,36 @@ export DOCKER_REGISTRY="your-registry.com"
 ./bake.sh base --set "*.tags=my-runpod:${RELEASE_VERSION}"
 ```
 
+### RunPod Platform Configuration
+
+#### SSH Key Setup (Optional)
+RunPod can automatically manage SSH access:
+
+1. **Via RunPod Account** (Recommended):
+   - Go to RunPod Dashboard → Account Settings → SSH Keys
+   - Add your public key: `cat ~/.ssh/id_rsa.pub`
+   - RunPod will automatically inject this key into containers
+
+2. **Via Environment Variable** (Manual):
+   - Set `PUBLIC_KEY` in your template environment variables
+   - Useful for additional keys or local development
+
+#### Template Environment Variables
+When creating a RunPod template, set these variables:
+```bash
+JUPYTER_PASSWORD=your-secure-password
+ENABLE_FILEBROWSER=1
+ENABLE_HTTP_SERVER=0
+```
+
+#### Port Mapping in RunPod
+RunPod automatically handles port mapping. The following ports will be accessible:
+- Port 22: SSH access
+- Port 8888: Jupyter Lab (if `JUPYTER_PASSWORD` is set)
+- Port 4041: Filebrowser (if enabled)
+- Port 8089: HTTP Server (if enabled)
+- Additional development ports as needed
+
 ## 🚀 Getting Started
 
 1. **Set up environment variables** (see above section)
@@ -233,9 +268,11 @@ docker run -it --rm \
 # 4. RunPod Template Environment Variables
 # Set these in your RunPod template:
 # JUPYTER_PASSWORD=your-secure-password
-# PUBLIC_KEY=ssh-rsa AAAAB3NzaC1yc2E... (your public key)
 # ENABLE_FILEBROWSER=1
 # ENABLE_HTTP_SERVER=0
+# 
+# Note: PUBLIC_KEY may not be needed if you've added SSH keys 
+# to your RunPod account settings
 ```
 
 ## 📝 License
