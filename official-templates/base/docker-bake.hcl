@@ -10,11 +10,6 @@ target "common-base" {
   context = "official-templates/base"
   dockerfile = "Dockerfile"
   platforms = ["linux/amd64"]
-  contexts = {
-    scripts = "container-template"
-    proxy   = "container-template/proxy"
-    logo    = "container-template"
-  }
 }
 
 target "cpu-ubuntu2004" {
