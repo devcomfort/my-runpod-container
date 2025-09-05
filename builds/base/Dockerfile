@@ -177,11 +177,6 @@ RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | b
 # Install filebrowser
 RUN curl -LsSf https://raw.githubusercontent.com/filebrowser/get/master/get.sh | bash
 
-# NOTE: Install s6-overlay for process supervision
-ARG S6_OVERLAY_VERSION=3.2.0.0
-RUN curl -LsSf https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz | tar -C / -Jxpf - && \
-    curl -LsSf https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64.tar.xz | tar -C / -Jxpf -
-
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY snippets /etc/nginx/snippets
 COPY readme.html /usr/share/nginx/html/readme.html
@@ -200,6 +195,4 @@ COPY runpod.txt /etc/runpod.txt
 RUN echo 'cat /etc/runpod.txt' >> /root/.bashrc
 RUN echo 'echo -e "\nFor detailed documentation and guides, please visit:\n\033[1;34mhttps://docs.runpod.io/\033[0m and \033[1;34mhttps://blog.runpod.io/\033[0m\n\n"' >> /root/.bashrc
 
-# Set s6-overlay entrypoint
-ENTRYPOINT ["/init"]
 CMD ["/start.sh"]
