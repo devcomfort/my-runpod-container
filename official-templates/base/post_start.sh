@@ -38,5 +38,7 @@ monitor_ssh() {
 
 monitor_ssh &
 
-# Start filebrowser
-filebrowser --address=0.0.0.0 --port=4040 --root=/ --noauth &
+# Start filebrowser (toggleable; default on)
+if [[ "${ENABLE_FILEBROWSER:-1}" == "1" ]]; then
+    filebrowser --address=0.0.0.0 --port=4040 --root=/ --noauth &
+fi

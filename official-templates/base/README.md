@@ -8,7 +8,7 @@ Runpod Base images are designed to be lightweight but flexible—supporting a wi
 - **Ready-to-use Jupyter Environment** — Both Notebook and JupyterLab with widgets and extensions (optional - can be disabled by not setting `JUPYTER_PASSWORD`)
 - **Multiple Python Versions** — Python 3.9 through 3.13 installed and ready to use, with 3.10 as the default
 - **Smart Workspace Setup** — Pre-configured directory structure with optimized cache locations for faster package installs
-- **Developer Tools** — SSH access for remote development and NGINX server for web services
+- **Developer Tools** — SSH access for remote development and NGINX server for web services. Optional reserve ports for code-server (8081→8080), http.server (8089→8088), filebrowser (4041→4040), and generic backends (5001→5000 / 6001→6000 / 7001→7000 / 9001→9000).
 - **ML-Ready Libraries** — Core dependencies for scientific computing, image processing, and machine learning workflows
 
 **Choose your combination:**
@@ -94,3 +94,10 @@ Perfect for immediate development and experimenting, or as the foundation for mo
         - `runpod/base:0.7.0-cuda1290-ubuntu2404`
         - `runpod/base:0.7.0-noble-cuda1290`
 </div>
+
+## Service Toggles
+
+- `JUPYTER_PASSWORD`: set to enable Jupyter on 8888
+- `ENABLE_FILEBROWSER=1`: start filebrowser on 4040 (proxied at 4041)
+- `ENABLE_HTTP_SERVER=1`: start temporary http.server on 8088 (proxied at 8089)
+
